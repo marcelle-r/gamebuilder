@@ -29,7 +29,7 @@ with sync_playwright() as p:
     pg.goto(url)
     pg.wait_for_selector("text=Marcelle de Matos Ribeiro")
 
-    pg.click("#exCards >> text=Tic-Tac-Toe")
+    pg.click("#exList >> text=Tic-Tac-Toe")
     pg.wait_for_selector("#frameHost iframe")
     check(pg.get_attribute("#frameHost iframe", "sandbox") == "allow-scripts", "game runs in a sandboxed iframe (scripts only, no same-origin)")
     check(pg.evaluate("document.querySelector('#stage').hidden"), "inline fallback not used")

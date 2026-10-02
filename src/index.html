@@ -1,43 +1,33 @@
 <title>GameBuilder</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Unbounded:wght@500;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,800&family=Space+Mono:wght@400;700&display=swap">
 <style>
-/* Palette: lavender ground with a deep violet accent. Layout: a workshop bench. Left rail lists games; the bench shows the composer, or the game table beside the change chat. */
+/* Look: "game night". Deep navy ground, lime for actions, pink and cyan for players.
+   Layout: three steps (Describe, Play, Change). Left rail lists games; the main area shows
+   the composer, or the game table beside the change panel. */
 :root {
-  --bg: #F3EFFA;
-  --surface: #FFFFFF;
-  --surface-2: #F8F5FD;
-  --ink: #1F1830;
-  --muted: #5F5772;
-  --line: #DCD2EC;
-  --accent: #6A45B8;
-  --accent-ink: #FFFFFF;
-  --accent-soft: #E9E0F8;
-  --board: #4A3383;
-  --warn-bg: #FFF4E0;
-  --warn-ink: #7A4A00;
-  --danger: #B42318;
-  --code-bg: #F5F1FB;
-  --p0: #E5484D; --p1: #E8B100; --p2: #3E7FE0; --p3: #2F9E66; --p4: #8E4EC6;
-  --p5: #F07A2E; --p6: #0FA3B1; --p7: #D6409F; --p8: #6E7B8B; --p9: #8A6A3C;
-  --font-display: "Unbounded", "Trebuchet MS", system-ui, sans-serif;
-  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
-  --radius: 12px;
-}
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg: #14101F; --surface: #1C1729; --surface-2: #231D33; --ink: #ECE7F5; --muted: #A69EBA;
-    --line: #352D48; --accent: #B59EF2; --accent-ink: #1B1131; --accent-soft: #2F2549; --board: #3B2A66;
-    --warn-bg: #3A2A0E; --warn-ink: #F6CF8A; --danger: #F2766B; --code-bg: #171224;
-    color-scheme: dark;
-  }
-}
-:root[data-theme="dark"] {
-  --bg: #14101F; --surface: #1C1729; --surface-2: #231D33; --ink: #ECE7F5; --muted: #A69EBA;
-  --line: #352D48; --accent: #B59EF2; --accent-ink: #1B1131; --accent-soft: #2F2549; --board: #3B2A66;
-  --warn-bg: #3A2A0E; --warn-ink: #F6CF8A; --danger: #F2766B; --code-bg: #171224;
+  --bg: #10141F;
+  --surface: #171C2A;
+  --surface-2: #1C2233;
+  --ink: #EEF0F5;
+  --muted: #9AA3B8;
+  --line: #2A3247;
+  --accent: #C6F432;
+  --accent-ink: #10141F;
+  --accent-soft: #232D1C;
+  --pink: #FF5FA2;
+  --board: #26304A;
+  --warn-bg: #3A2E10;
+  --warn-ink: #FFD98A;
+  --danger: #FF7A7A;
+  --code-bg: #0C0F18;
+  --p0: #FF5FA2; --p1: #FFD84D; --p2: #5FD4FF; --p3: #C6F432; --p4: #B49BFF;
+  --p5: #FF9F4D; --p6: #3FE0C0; --p7: #FF6B6B; --p8: #A3ACC0; --p9: #D9A96C;
+  --font-display: "Bricolage Grotesque", "Trebuchet MS", system-ui, sans-serif;
+  --font-body: "Bricolage Grotesque", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "Space Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --radius: 4px;
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
@@ -47,61 +37,66 @@ body { background: var(--bg); color: var(--ink); font: 15px/1.5 var(--font-body)
 button, input, select, textarea { font: inherit; color: inherit; }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 h1, h2, h3 { margin: 0; text-wrap: balance; }
+.mono { font-family: var(--font-mono); }
 
-.top { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 20px; border-bottom: 1px solid var(--line); background: var(--surface); }
-.brand { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; min-width: 0; }
-.logo { font: 700 19px/1 var(--font-display); letter-spacing: -0.01em; }
+/* Top bar with the three steps */
+.top { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 20px; border-bottom: 1px solid var(--line); background: var(--bg); flex-wrap: wrap; }
+.logo { font: 800 21px/1 var(--font-display); letter-spacing: -0.02em; }
 .logo span { color: var(--accent); }
-.tagline { color: var(--muted); font-size: 13px; }
-.who { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); white-space: nowrap; }
-.avatar { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); font-weight: 600; font-size: 12px; }
+.stepsbar { display: flex; gap: 4px; font: 13px/1 var(--font-mono); list-style: none; margin: 0; padding: 0; }
+.stepsbar li { padding: 8px 12px; color: var(--muted); }
+.stepsbar li[aria-current="step"] { background: var(--accent); color: var(--accent-ink); font-weight: 700; }
+.stepsbar li.done { color: var(--ink); }
+.who { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--muted); white-space: nowrap; }
+.avatar { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: var(--pink); color: var(--accent-ink); font-weight: 800; font-size: 12px; }
 
-.shell { display: grid; grid-template-columns: 250px minmax(0, 1fr); min-height: calc(100% - 59px); }
-.side { border-right: 1px solid var(--line); padding: 18px 14px; display: flex; flex-direction: column; gap: 22px; background: var(--surface-2); }
-.side h3 { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; padding-left: 8px; }
-.list { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
-.list button { width: 100%; text-align: left; border: 0; background: transparent; padding: 8px; border-radius: 8px; cursor: pointer; display: grid; gap: 1px; }
+.shell { display: grid; grid-template-columns: 240px minmax(0, 1fr); min-height: calc(100% - 59px); }
+.side { border-right: 1px solid var(--line); padding: 20px 16px; display: flex; flex-direction: column; gap: 24px; }
+.side h3 { font: 400 12px/1 var(--font-mono); color: var(--muted); margin-bottom: 8px; }
+.list { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.list button { width: 100%; text-align: left; border: 0; border-left: 3px solid transparent; background: transparent; padding: 8px 10px; cursor: pointer; display: grid; gap: 1px; }
 .list button:hover { background: var(--surface); }
-.list button[aria-current="true"] { background: var(--accent-soft); }
-.list .t { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.list button[aria-current="true"] { background: var(--surface-2); border-left-color: var(--pink); }
+.list .t { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .list .m { font-size: 12px; color: var(--muted); }
-.empty { font-size: 13px; color: var(--muted); padding: 0 8px; margin: 0; }
-.savenote { font-size: 12px; color: var(--muted); padding: 0 8px; margin: 6px 0 0; }
+.empty { font-size: 14px; color: var(--muted); margin: 0; }
+.savenote { font-size: 12px; color: var(--muted); margin: 6px 0 0; }
 
-.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 40px; padding: 0 16px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); cursor: pointer; font-weight: 500; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 42px; padding: 0 16px; border-radius: var(--radius); border: 1px solid var(--line); background: var(--surface); cursor: pointer; font-weight: 600; }
 .btn:hover { border-color: var(--muted); }
-.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
-.btn.primary:hover { filter: brightness(1.06); }
-.btn:disabled { opacity: 0.55; cursor: not-allowed; }
-.btn.small { min-height: 32px; padding: 0 12px; font-size: 13px; border-radius: 8px; }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-family: var(--font-mono); font-weight: 700; font-size: 14px; }
+.btn.primary:hover { filter: brightness(1.08); }
+.btn.outline { background: transparent; border: 1.5px solid var(--accent); color: var(--accent); font-family: var(--font-mono); font-weight: 700; font-size: 14px; }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn.small { min-height: 34px; padding: 0 12px; font-size: 13px; }
+.btn.icon { width: 44px; min-height: 44px; padding: 0; background: var(--bg); }
 .btn.danger { color: var(--danger); }
-.linkish { border: 0; background: none; padding: 0; color: var(--accent); cursor: pointer; font-weight: 500; }
+.linkish { border: 0; background: none; padding: 0; color: var(--accent); cursor: pointer; font-weight: 500; text-decoration: underline; text-underline-offset: 3px; }
 
-main { padding: 26px clamp(16px, 3vw, 36px) 48px; min-width: 0; }
+main { padding: 28px clamp(16px, 3vw, 40px) 48px; min-width: 0; }
 
-/* Composer */
-.composer { max-width: 760px; display: grid; gap: 18px; }
-.eyebrow { font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); font-weight: 600; }
-.composer h1 { font: 700 clamp(24px, 3.4vw, 34px)/1.15 var(--font-display); letter-spacing: -0.02em; }
-.lede { margin: 0; color: var(--muted); max-width: 62ch; }
-.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; }
-.prompt { width: 100%; min-height: 110px; resize: vertical; border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; background: var(--surface-2); line-height: 1.5; }
+/* Describe */
+.composer { max-width: 780px; display: grid; gap: 20px; }
+.composer h1 { font: 800 clamp(32px, 4.4vw, 48px)/1 var(--font-display); letter-spacing: -0.03em; }
+.composer h1 span { color: var(--accent); }
+.lede { margin: 0; color: var(--muted); font-size: 17px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px; }
+.prompt { width: 100%; min-height: 120px; resize: vertical; border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 14px; background: var(--bg); line-height: 1.5; font-size: 16px; }
 .row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
 .row.end { justify-content: space-between; }
 .field { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; color: var(--muted); }
-select { min-height: 36px; border: 1px solid var(--line); border-radius: 8px; padding: 0 8px; background: var(--surface); }
+select { min-height: 40px; border: 1px solid var(--line); border-radius: var(--radius); padding: 0 10px; background: var(--bg); }
+.stepper { display: inline-flex; align-items: center; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+.stepper button { width: 42px; height: 42px; border: 0; background: var(--bg); color: var(--accent); font-size: 20px; cursor: pointer; }
+.stepper button:disabled { color: var(--line); cursor: default; }
+.stepper output { min-width: 40px; text-align: center; font-weight: 700; font-size: 17px; font-variant-numeric: tabular-nums; }
 .counts { display: flex; flex-wrap: wrap; gap: 4px; }
-.counts button { width: 34px; height: 34px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); cursor: pointer; font-variant-numeric: tabular-nums; }
-.counts button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
-.chips { display: flex; flex-wrap: wrap; gap: 8px; }
-.chip { text-align: left; border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 6px 12px; font-size: 13px; cursor: pointer; }
+.counts button { width: 36px; height: 36px; border-radius: var(--radius); border: 1px solid var(--line); background: var(--bg); cursor: pointer; font-variant-numeric: tabular-nums; }
+.counts button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 700; }
+.chips { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 14px; color: var(--muted); }
+.chip { text-align: left; border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 7px 14px; font-size: 14px; color: var(--ink); cursor: pointer; }
 .chip:hover { border-color: var(--accent); color: var(--accent); }
-.examples { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
-.excard { text-align: left; cursor: pointer; display: grid; gap: 6px; }
-.excard:hover { border-color: var(--accent); }
-.excard strong { font-size: 16px; }
-.excard span { font-size: 13px; color: var(--muted); }
-.notice { background: var(--warn-bg); color: var(--warn-ink); border-radius: 10px; padding: 10px 14px; font-size: 14px; margin: 0; }
+.notice { background: var(--warn-bg); color: var(--warn-ink); border-radius: var(--radius); padding: 10px 14px; font-size: 14px; margin: 0; }
 
 /* Build progress */
 .progress { display: grid; gap: 12px; }
@@ -114,63 +109,71 @@ select { min-height: 36px; border: 1px solid var(--line); border-radius: 8px; pa
 .steps li.fail { color: var(--danger); }
 .steps li.fail::before { background: var(--danger); border-color: var(--danger); }
 @keyframes spin { to { transform: translateY(1px) rotate(360deg); } }
-.stream { margin: 0; max-height: 220px; overflow: auto; background: var(--code-bg); border: 1px solid var(--line); border-radius: 10px; padding: 12px; font: 12px/1.5 var(--font-mono); white-space: pre-wrap; word-break: break-word; color: var(--muted); }
+.stream { margin: 0; max-height: 220px; overflow: auto; background: var(--code-bg); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px; font: 12px/1.5 var(--font-mono); white-space: pre-wrap; word-break: break-word; color: var(--muted); }
 .err { color: var(--danger); font-size: 14px; margin: 0; }
 
-/* Game workspace */
-.ghead { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
-.ghead h1 { font: 700 clamp(22px, 3vw, 30px)/1.15 var(--font-display); letter-spacing: -0.02em; }
-.ghead p { margin: 4px 0 8px; color: var(--muted); max-width: 70ch; }
-.tags { display: flex; flex-wrap: wrap; gap: 6px; }
-.tag { font-size: 12px; padding: 3px 9px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); color: var(--muted); }
-.tag.accent { background: var(--accent-soft); border-color: transparent; color: var(--accent); font-weight: 500; }
-.work { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(280px, 1fr); gap: 18px; align-items: start; }
+/* Play */
+.ghead { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 20px; }
+.ghead h1 { font: 800 clamp(28px, 3.6vw, 44px)/1.05 var(--font-display); letter-spacing: -0.03em; }
+.ghead p { margin: 6px 0 0; color: var(--muted); max-width: 70ch; }
+.tags { font: 12px/1.4 var(--font-mono); color: var(--muted); margin-top: 8px; }
+.work { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(280px, 1fr); gap: 20px; align-items: start; }
 .play, .chat { display: grid; gap: 14px; }
-.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
-.seg button { border: 0; background: var(--surface); padding: 0 12px; min-height: 36px; cursor: pointer; font-size: 14px; }
-.seg button[aria-pressed="true"] { background: var(--ink); color: var(--surface); }
 .check { display: inline-flex; gap: 6px; align-items: center; font-size: 14px; color: var(--muted); }
-.status { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; min-height: 32px; font-weight: 500; }
-.dot { width: 12px; height: 12px; border-radius: 50%; flex: none; }
+.status { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; min-height: 32px; font-size: 19px; font-weight: 600; }
+.dot { width: 10px; height: 10px; flex: none; }
 .status .sub { color: var(--muted); font-weight: 400; font-size: 14px; }
 .stagewrap { position: relative; min-height: 260px; }
 #stage {
   display: block; padding: 6px 0;
-  --g-bg: var(--surface-2); --g-surface: var(--surface); --g-fg: var(--ink); --g-muted: var(--muted); --g-line: var(--line);
+  --g-bg: var(--surface-2); --g-surface: var(--bg); --g-fg: var(--ink); --g-muted: var(--muted); --g-line: var(--line);
   --g-accent: var(--accent); --g-accent-ink: var(--accent-ink); --g-board: var(--board);
   --g-p0: var(--p0); --g-p1: var(--p1); --g-p2: var(--p2); --g-p3: var(--p3); --g-p4: var(--p4);
   --g-p5: var(--p5); --g-p6: var(--p6); --g-p7: var(--p7); --g-p8: var(--p8); --g-p9: var(--p9);
 }
-.handoff { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; gap: 14px; text-align: center; background: var(--surface); border-radius: 10px; padding: 20px; }
-.handoff strong { font: 700 22px/1.2 var(--font-display); }
+.handoff { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; gap: 14px; text-align: center; background: var(--surface); padding: 20px; }
+.handoff strong { font: 800 24px/1.2 var(--font-display); }
 .handoff p { margin: 0; color: var(--muted); max-width: 36ch; }
-.resultbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; background: var(--accent-soft); border-radius: 10px; padding: 12px 14px; }
-.resultbar strong { font-size: 17px; }
+.resultbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; background: var(--accent-soft); border-left: 3px solid var(--accent); padding: 12px 14px; }
+.resultbar strong { font-size: 18px; }
 .resultbar span { color: var(--muted); font-size: 14px; }
-.bug { border: 1px solid var(--danger); border-radius: 10px; padding: 12px 14px; display: grid; gap: 8px; }
+.bug { border: 1px solid var(--danger); border-radius: var(--radius); padding: 12px 14px; display: grid; gap: 8px; }
 .bug p { margin: 0; font-size: 14px; }
 .bug code { font: 12px/1.5 var(--font-mono); color: var(--danger); word-break: break-word; }
-details { border-top: 1px solid var(--line); padding-top: 10px; }
-summary { cursor: pointer; font-size: 14px; font-weight: 500; color: var(--muted); }
-.log { margin: 10px 0 0; max-height: 260px; overflow: auto; background: var(--code-bg); border-radius: 10px; padding: 10px; font: 12px/1.5 var(--font-mono); white-space: pre-wrap; word-break: break-word; }
+.tabs { display: flex; gap: 4px; border-top: 1px solid var(--line); padding-top: 12px; font: 13px/1 var(--font-mono); }
+.tabs button { min-height: 34px; padding: 0 12px; border: 0; background: transparent; color: var(--muted); cursor: pointer; }
+.tabs button[aria-selected="true"] { background: var(--ink); color: var(--bg); font-weight: 700; }
+.tabpanel { font-size: 15px; color: var(--ink); }
+.tabpanel h4 { margin: 14px 0 6px; font: 400 12px/1 var(--font-mono); color: var(--muted); }
+.log { margin: 0; max-height: 260px; overflow: auto; background: var(--code-bg); border-radius: var(--radius); padding: 10px; font: 12px/1.5 var(--font-mono); white-space: pre-wrap; word-break: break-word; }
 .log .k { color: var(--accent); }
-.chat h2 { font-size: 16px; font-weight: 600; }
-.chat .hint { margin: 0; font-size: 13px; color: var(--muted); }
-.bubbles { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; max-height: 340px; overflow: auto; }
-.bubbles li { padding: 9px 12px; border-radius: 12px; font-size: 14px; max-width: 92%; }
-.bubbles li.user { justify-self: end; background: var(--ink); color: var(--surface); border-bottom-right-radius: 4px; }
-.bubbles li.ai { justify-self: start; background: var(--surface-2); border: 1px solid var(--line); border-bottom-left-radius: 4px; }
-.bubbles li small { display: block; font-size: 11px; opacity: 0.7; margin-top: 2px; }
-.chatform { display: grid; gap: 8px; }
-.chatform textarea { min-height: 72px; resize: vertical; border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; background: var(--surface-2); }
-.versions { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 6px; font-size: 13px; }
-.versions li { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
-.versions li span { color: var(--muted); }
-.rules { margin: 10px 0 0; font-size: 14px; }
-.code { margin: 10px 0 0; max-height: 320px; overflow: auto; background: var(--code-bg); border-radius: 10px; padding: 10px; font: 12px/1.5 var(--font-mono); white-space: pre; }
+.rules { margin: 0; line-height: 1.6; color: #C9CFDC; }
+.code { margin: 0; max-height: 320px; overflow: auto; background: var(--code-bg); border-radius: var(--radius); padding: 10px; font: 12px/1.5 var(--font-mono); white-space: pre; }
+.tutorial { margin: 0; padding-left: 20px; display: grid; gap: 4px; color: #C9CFDC; }
 #frameHost iframe { display: block; width: 100%; height: 320px; border: 0; background: transparent; }
-.tutorial { margin: 10px 0 0; padding-left: 20px; font-size: 14px; display: grid; gap: 4px; }
-.toast { position: fixed; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--ink); color: var(--surface); padding: 10px 16px; border-radius: 10px; font-size: 14px; max-width: min(90vw, 460px); box-shadow: 0 8px 24px rgba(0,0,0,.2); }
+
+/* Change */
+.chat.card { background: var(--accent); color: var(--accent-ink); border: 0; }
+.chat h2 { font: 800 24px/1.1 var(--font-display); letter-spacing: -0.02em; }
+.chat .hint { margin: 0; font-size: 14px; color: #2C3519; }
+.chat .vlabel { font: 700 12px/1 var(--font-mono); color: var(--accent-ink); }
+.bubbles { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; max-height: 300px; overflow: auto; }
+.bubbles li { padding: 9px 12px; font-size: 14px; max-width: 92%; }
+.bubbles li.user { justify-self: end; background: var(--accent-ink); color: var(--ink); }
+.bubbles li.ai { justify-self: start; background: #E3FF8A; color: var(--accent-ink); }
+.bubbles li small { display: block; font-size: 11px; opacity: 0.75; margin-top: 2px; }
+.chatform { display: grid; gap: 8px; }
+.chatform textarea { min-height: 84px; resize: vertical; border: 1.5px solid var(--accent-ink); border-radius: 0; padding: 10px 12px; background: #E3FF8A; color: var(--accent-ink); font: 14px/1.5 var(--font-mono); }
+.chatform textarea::placeholder { color: #55613A; }
+.chat .btn.primary { background: var(--accent-ink); border-color: var(--accent-ink); color: var(--accent); }
+.chat .progress { background: var(--bg); color: var(--ink); padding: 12px; }
+.versions { list-style: none; margin: 0; padding: 12px 0 0; border-top: 1.5px solid var(--accent-ink); display: grid; gap: 8px; font-size: 14px; }
+.versions li { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+.versions li span { color: #2C3519; }
+.versions .cur { font: 700 12px/1 var(--font-mono); padding: 3px 8px; background: var(--accent-ink); color: var(--accent); }
+.versions .linkish { color: var(--accent-ink); font-family: var(--font-mono); font-size: 13px; }
+.chat :focus-visible { outline-color: var(--accent-ink); }
+.toast { position: fixed; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 10px 16px; font-size: 14px; max-width: min(90vw, 460px); box-shadow: 0 8px 24px rgba(0,0,0,.4); }
 
 @media (max-width: 900px) {
   .work { grid-template-columns: minmax(0, 1fr); }
@@ -179,8 +182,10 @@ summary { cursor: pointer; font-size: 14px; font-weight: 500; color: var(--muted
   .shell { grid-template-columns: minmax(0, 1fr); }
   .side { border-right: 0; border-bottom: 1px solid var(--line); padding: 14px 16px; gap: 14px; }
   .side .list { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
-  .tagline { display: none; }
-  .top { padding: 12px 16px; }
+  .top { padding: 10px 16px; }
+  .stepsbar { order: 3; width: 100%; justify-content: space-between; }
+  .stepsbar li { padding: 8px 10px; }
+  #whoName { display: none; }
 }
 @media (prefers-reduced-motion: reduce) {
   .steps li.on::before { animation: none; }
@@ -188,53 +193,54 @@ summary { cursor: pointer; font-size: 14px; font-weight: 500; color: var(--muted
 </style>
 
 <header class="top">
-  <div class="brand">
-    <div class="logo">Game<span>Builder</span></div>
-    <div class="tagline">Describe a game. Play it. Change it.</div>
-  </div>
+  <div class="logo">game<span>/</span>builder</div>
+  <ol class="stepsbar" id="stepsBar" aria-label="Steps">
+    <li data-step="describe" aria-current="step">[1] describe</li>
+    <li data-step="play">[2] play</li>
+    <li data-step="change">[3] change</li>
+  </ol>
   <div class="who" id="who"><span class="avatar" id="avatar">?</span><span id="whoName">Connecting…</span></div>
 </header>
 
 <div class="shell">
   <aside class="side">
-    <button class="btn primary" id="newBtn" type="button">New game</button>
+    <button class="btn outline" id="newBtn" type="button">+ new game</button>
     <section>
-      <h3>My games</h3>
+      <h3>// my games</h3>
       <ul class="list" id="myList"></ul>
       <p class="empty" id="myEmpty">Games you build appear here.</p>
       <p class="savenote" id="saveNote" hidden></p>
     </section>
     <section>
-      <h3>Built-in</h3>
+      <h3>// built-in</h3>
       <ul class="list" id="exList"></ul>
     </section>
   </aside>
 
   <main>
     <section id="viewNew" class="composer">
-      <div>
-        <div class="eyebrow">New game</div>
-        <h1>Describe a game and play it in a minute</h1>
-      </div>
-      <p class="lede">GameBuilder writes the rules, the board and a computer opponent, tests the code by playing it, and runs it in a sandbox. Then play it on one device or against the computer, and change it by chatting.</p>
-      <p class="notice" id="noAi" hidden>Building games needs Claude, which isn't available in this view. You can still play the example games.</p>
-      <form class="card" id="newForm" style="display:grid;gap:12px">
-        <label for="newPrompt" style="font-weight:500">What should we build?</label>
-        <textarea class="prompt" id="newPrompt" placeholder="Example: Tic-Tac-Toe on a 3×3 board"></textarea>
+      <h1>Describe a <span>game</span></h1>
+      <p class="lede">Say the rules in plain words. We build it, test it, and you play.</p>
+      <p class="notice" id="noAi" hidden>Building games needs Claude, which isn't available in this view. You can still play the built-in game.</p>
+      <form class="card" id="newForm" style="display:grid;gap:16px">
+        <label for="newPrompt" style="font-weight:600">What game should we build?</label>
+        <textarea class="prompt" id="newPrompt" placeholder="Example: Tic-Tac-Toe on a 4×4 board, 4 in a row wins"></textarea>
         <div class="row end">
           <div class="row">
-            <span class="field" id="plLabel">Allowed players</span>
-            <div class="counts" id="counts" role="group" aria-labelledby="plLabel"></div>
+            <span class="field" id="plLabel">Players</span>
+            <div class="stepper" id="stepper" role="group" aria-labelledby="plLabel">
+              <button type="button" id="plMinus" aria-label="Fewer players">−</button>
+              <output id="plValue" aria-live="polite">2</output>
+              <button type="button" id="plPlus" aria-label="More players">+</button>
+            </div>
+            <div class="counts" id="counts" role="group" aria-labelledby="plLabel" hidden></div>
+            <button class="linkish" type="button" id="plMore">Allow other counts</button>
           </div>
-          <button class="btn primary" id="buildBtn" type="submit">Build game</button>
+          <button class="btn primary" id="buildBtn" type="submit">build game →</button>
         </div>
-        <div class="chips" id="ideas"></div>
       </form>
+      <div class="chips"><span>Try:</span><span class="chips" id="ideas"></span></div>
       <div class="card progress" id="newProgress" hidden></div>
-      <div>
-        <h2 style="font-size:15px;margin-bottom:10px">Or try the built-in test game</h2>
-        <div class="examples" id="exCards"></div>
-      </div>
     </section>
 
     <section id="viewGame" hidden>
@@ -251,13 +257,14 @@ summary { cursor: pointer; font-size: 14px; font-weight: 500; color: var(--muted
         <section class="play card">
           <div class="row end">
             <div class="row">
-              <div class="seg" role="group" aria-label="How to play">
-                <button type="button" id="modePass" aria-pressed="false">Pass and play</button>
-                <button type="button" id="modeCpu" aria-pressed="true">Vs computer</button>
-              </div>
-              <span class="field">Players <select id="pCount" aria-label="Number of players"></select></span>
+              <label class="field mono" for="modeSel">vs</label>
+              <select id="modeSel" class="mono">
+                <option value="computer">computer</option>
+                <option value="pass">friend, same device</option>
+              </select>
+              <span class="field mono" id="pWrap">players <select id="pCount" aria-label="Number of players"></select></span>
             </div>
-            <button class="btn small" id="restartBtn" type="button">New match</button>
+            <button class="btn icon" id="restartBtn" type="button" aria-label="New match" title="New match"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="color:var(--accent)"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg></button>
           </div>
           <div class="row" id="passOpts">
             <label class="check"><input type="checkbox" id="hideBetween"> Hide the screen between turns</label>
@@ -265,7 +272,7 @@ summary { cursor: pointer; font-size: 14px; font-weight: 500; color: var(--muted
           <div class="bug" id="bug" hidden>
             <p><strong>This version of the game has a bug.</strong></p>
             <code id="bugMsg"></code>
-            <div class="row"><button class="btn small primary" id="fixBtn" type="button">Ask AI to fix it</button></div>
+            <div class="row"><button class="btn small primary" id="fixBtn" type="button">ask AI to fix it</button></div>
           </div>
           <div class="status" id="status"></div>
           <div class="stagewrap">
@@ -279,40 +286,37 @@ summary { cursor: pointer; font-size: 14px; font-weight: 500; color: var(--muted
           </div>
           <div class="resultbar" id="resultBar" hidden>
             <div><strong id="resultText"></strong><br><span id="resultSub"></span></div>
-            <button class="btn small primary" id="againBtn" type="button">Play again</button>
+            <button class="btn small primary" id="againBtn" type="button">play again</button>
           </div>
-          <details>
-            <summary>Game API messages</summary>
+          <div class="tabs" role="tablist" aria-label="About this game">
+            <button type="button" role="tab" id="tabRules" aria-controls="panelRules" aria-selected="true">rules</button>
+            <button type="button" role="tab" id="tabTutorial" aria-controls="panelTutorial" aria-selected="false">tutorial</button>
+            <button type="button" role="tab" id="tabCode" aria-controls="panelCode" aria-selected="false">code</button>
+          </div>
+          <div class="tabpanel" role="tabpanel" id="panelRules" aria-labelledby="tabRules"><p class="rules" id="gRules"></p></div>
+          <div class="tabpanel" role="tabpanel" id="panelTutorial" aria-labelledby="tabTutorial" hidden><ol class="tutorial" id="gTutorial"></ol></div>
+          <div class="tabpanel" role="tabpanel" id="panelCode" aria-labelledby="tabCode" hidden>
+            <h4>// game api messages</h4>
             <div class="log" id="apiLog"></div>
-          </details>
+            <h4>// game code</h4>
+            <pre class="code" id="gCode"></pre>
+          </div>
         </section>
 
         <aside class="chat card">
           <h2>Change the game</h2>
-          <p class="hint" id="chatHint">Ask for any change: rules, board size, number of players, looks, or a smarter computer.</p>
+          <p class="hint" id="chatHint">Describe a change. It becomes a new version.</p>
           <ol class="bubbles" id="bubbles"></ol>
           <div class="progress" id="chatProgress" hidden></div>
           <form class="chatform" id="chatForm">
-            <label for="chatInput" class="hint">Your change</label>
-            <textarea id="chatInput" placeholder="Example: make the board 4×4 with 4 in a row"></textarea>
-            <button class="btn primary" id="sendBtn" type="submit">Update game</button>
+            <label for="chatInput" class="vlabel">// your change</label>
+            <textarea id="chatInput" placeholder="make the board 4×4 with 4 in a row"></textarea>
+            <button class="btn primary" id="sendBtn" type="submit">update game →</button>
           </form>
-          <details>
-            <summary>Rules</summary>
-            <p class="rules" id="gRules"></p>
-          </details>
-          <details>
-            <summary>Tutorial</summary>
-            <ol class="tutorial" id="gTutorial"></ol>
-          </details>
-          <details>
-            <summary>Versions</summary>
-            <ol class="versions" id="versions"></ol>
-          </details>
-          <details>
-            <summary>Code</summary>
-            <pre class="code" id="gCode"></pre>
-          </details>
+          <div>
+            <div class="vlabel">// versions</div>
+            <ol class="versions" id="versions" style="margin-top:8px"></ol>
+          </div>
         </aside>
       </div>
     </section>
@@ -334,9 +338,19 @@ summary { cursor: pointer; font-size: 14px; font-weight: 500; color: var(--muted
   const pColor = (i) => "var(--p" + (i % 10) + ")";
 
   const IDEAS = [
-    "Tic-Tac-Toe on a 3×3 board",
     "Tic-Tac-Toe on a 4×4 board, 4 in a row wins",
   ];
+
+  /* ---------- Steps bar: describe → play → change ---------- */
+  function setStep(name) {
+    const order = ["describe", "play", "change"];
+    const at = order.indexOf(name);
+    document.querySelectorAll("#stepsBar li").forEach((li) => {
+      const i = order.indexOf(li.dataset.step);
+      if (i === at) li.setAttribute("aria-current", "step"); else li.removeAttribute("aria-current");
+      li.classList.toggle("done", i < at);
+    });
+  }
 
   const caps = { sample: null, db: null, user: null };
   let uid = null;
@@ -691,7 +705,7 @@ ${FORMAT}`;
     ).join("");
     $("myEmpty").hidden = mine.length > 0;
     $("exList").innerHTML = EXAMPLES.map((g) =>
-      '<li><button type="button" data-open="' + g.id + '"' + (current && current.id === g.id ? ' aria-current="true"' : "") + '><span class="t">' + esc(g.title) + '</span><span class="m">Built-in test game · ' + playersLabel(g) + "</span></button></li>"
+      '<li><button type="button" data-open="' + g.id + '"' + (current && current.id === g.id ? ' aria-current="true"' : "") + '><span class="t">' + esc(g.title) + '</span><span class="m">Test game · ' + playersLabel(g) + "</span></button></li>"
     ).join("");
   }
   function allowedOf(g) {
@@ -722,6 +736,7 @@ ${FORMAT}`;
     current = null;
     $("viewGame").hidden = true;
     $("viewNew").hidden = false;
+    setStep("describe");
     renderSidebar();
     $("newPrompt").focus();
   }
@@ -738,6 +753,8 @@ ${FORMAT}`;
     current = rec;
     $("viewNew").hidden = true;
     $("viewGame").hidden = false;
+    setStep("play");
+    selectTab("Rules");
     $("gTitle").textContent = rec.title || "Untitled game";
     $("gDesc").textContent = rec.description || "";
     renderHeadTags(rec);
@@ -746,14 +763,15 @@ ${FORMAT}`;
     $("gTutorial").innerHTML = (rec.tutorial || []).length ? rec.tutorial.map((t) => "<li>" + esc(t) + "</li>").join("") : "<li>No tutorial yet. Ask for one in the chat.</li>";
     $("gCode").textContent = rec.code;
     $("chatHint").textContent = rec.example
-      ? "Ask for any change. Your changed version is saved under My games."
-      : "Ask for any change: rules, board size, number of players, looks, or a smarter computer.";
+      ? "Describe a change. Your version is saved under My games."
+      : "Describe a change: rules, board size, players, looks. It becomes a new version.";
     renderChat();
     renderVersions();
     $("bug").hidden = true;
     $("chatProgress").hidden = true;
     const allowed = allowedOf(rec);
     $("pCount").innerHTML = allowed.map((n) => '<option value="' + n + '">' + n + "</option>").join("");
+    $("pWrap").hidden = allowed.length < 2;
     $("hideBetween").checked = !!rec.hiddenInformation;
     setMode(rec.hiddenInformation && allowed[allowed.length - 1] > 1 ? "pass" : "computer");
     renderSidebar();
@@ -782,11 +800,17 @@ ${FORMAT}`;
       : d.toLocaleDateString([], { month: "short", day: "numeric" });
   }
   function renderHeadTags(rec) {
-    $("gTags").innerHTML =
-      '<span class="tag accent">' + playersLabel(rec) + "</span>" +
-      '<span class="tag">' + esc(statusLabel(rec)) + "</span>" +
-      (rec.hiddenInformation ? '<span class="tag">Hidden hands</span>' : "");
+    $("gTags").textContent = [playersLabel(rec), statusLabel(rec), rec.hiddenInformation ? "Hidden hands" : ""].filter(Boolean).join(" · ");
   }
+
+  /* ---------- Tabs under the board: rules, tutorial, code ---------- */
+  function selectTab(name) {
+    ["Rules", "Tutorial", "Code"].forEach((t) => {
+      $("tab" + t).setAttribute("aria-selected", String(t === name));
+      $("panel" + t).hidden = t !== name;
+    });
+  }
+  ["Rules", "Tutorial", "Code"].forEach((t) => { $("tab" + t).onclick = () => selectTab(t); });
   function renderActions(rec) {
     if (rec.example) { $("gActions").innerHTML = ""; return; }
     $("gActions").innerHTML = '<button class="btn small danger" type="button" id="delBtn">Delete</button>';
@@ -809,10 +833,10 @@ ${FORMAT}`;
   }
   function renderVersions() {
     const vs = (current && current.versions) || [];
-    if (!vs.length) { $("versions").innerHTML = '<li><span>Only the original version so far.</span></li>'; return; }
+    if (!vs.length) { $("versions").innerHTML = '<li><div><strong>Version 1</strong> <span>' + (current && current.example ? "built-in" : "original") + '</span></div><span class="cur">current</span></li>'; return; }
     $("versions").innerHTML = vs.slice().reverse().map((v, i) =>
       '<li><div><strong>Version ' + v.n + "</strong>" + " <span>" + esc(v.note || "") + "</span></div>" +
-      (i === 0 ? "<span>Current</span>" : '<button class="linkish" type="button" data-restore="' + v.n + '">Use this</button>') + "</li>"
+      (i === 0 ? '<span class="cur">current</span>' : '<button class="linkish" type="button" data-restore="' + v.n + '">use this</button>') + "</li>"
     ).join("");
   }
   $("versions").addEventListener("click", (e) => {
@@ -828,11 +852,27 @@ ${FORMAT}`;
   });
 
   /* ---------- New game ---------- */
+  /* Players: one number by default (− 2 +). "Allow other counts" opens the full set picker (for example 2, 3 or 6). */
   let chosen = new Set([2]);
+  let manyCounts = false;
   function renderCounts() {
+    const one = Math.min(...chosen);
+    $("plValue").textContent = String(one);
+    $("plMinus").disabled = one <= 1;
+    $("plPlus").disabled = one >= 10;
+    $("stepper").hidden = manyCounts;
+    $("counts").hidden = !manyCounts;
+    $("plMore").textContent = manyCounts ? "Just one count" : "Allow other counts";
     $("counts").innerHTML = Array.from({ length: 10 }, (_, i) => i + 1).map((n) =>
       '<button type="button" data-n="' + n + '" aria-pressed="' + chosen.has(n) + '" aria-label="' + n + ' players">' + n + "</button>").join("");
   }
+  $("plMinus").onclick = () => { chosen = new Set([Math.max(1, Math.min(...chosen) - 1)]); renderCounts(); };
+  $("plPlus").onclick = () => { chosen = new Set([Math.min(10, Math.min(...chosen) + 1)]); renderCounts(); };
+  $("plMore").onclick = () => {
+    manyCounts = !manyCounts;
+    if (!manyCounts) chosen = new Set([Math.min(...chosen)]);
+    renderCounts();
+  };
   $("counts").addEventListener("click", (e) => {
     const b = e.target.closest("[data-n]");
     if (!b) return;
@@ -846,17 +886,11 @@ ${FORMAT}`;
     const c = e.target.closest(".chip");
     if (!c) return;
     $("newPrompt").value = c.textContent;
-    const range = c.textContent.match(/(\d+)\s*to\s*(\d+)\s*players/);
-    chosen = new Set();
-    if (range) for (let n = +range[1]; n <= +range[2]; n++) chosen.add(n);
-    else if (/Memory/.test(c.textContent)) { chosen.add(1); chosen.add(2); }
-    else chosen.add(2);
+    chosen = new Set([2]);
+    manyCounts = false;
     renderCounts();
     $("newPrompt").focus();
   });
-  $("exCards").innerHTML = EXAMPLES.map((g) =>
-    '<button class="card excard" type="button" data-open="' + g.id + '"><strong>' + esc(g.title) + "</strong><span>" + esc(g.description) + "</span><span>" + playersLabel(g) + (g.hiddenInformation ? " · hidden hands" : "") + "</span></button>"
-  ).join("");
 
   $("newForm").addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -891,6 +925,7 @@ ${FORMAT}`;
     const base = current;
     if (!base) return;
     $("bug").hidden = true;
+    setStep("change");
     try {
       const out = await build({ kind, request, error, base, box: $("chatProgress") });
       const prevN = (base.versions || []).slice(-1)[0]?.n || 1;
@@ -919,6 +954,8 @@ ${FORMAT}`;
       openGame(rec);
     } catch (err) { /* shown in the progress card */ }
   }
+  $("chatInput").addEventListener("focus", () => setStep("change"));
+  $("chatInput").addEventListener("blur", () => { if (!building && current) setStep("play"); });
   $("chatForm").addEventListener("submit", (e) => {
     e.preventDefault();
     const request = $("chatInput").value.trim();
@@ -1008,10 +1045,10 @@ ${FORMAT}`;
   }
   function packageHtml(code) {
     const vars = Object.entries(themeVars()).map(([k, val]) => k + ":" + val).join(";");
-    const dark = matchMedia("(prefers-color-scheme: dark)").matches && document.documentElement.getAttribute("data-theme") !== "light" || document.documentElement.getAttribute("data-theme") === "dark";
     const safe = code.replace(/<\/script/gi, "<\\/script");
     return '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">' +
-      "<style>:root{" + vars + ";color-scheme:" + (dark ? "dark" : "light") + "}" +
+      "<style>:root{" + vars + ";color-scheme:dark}" + // the page is always dark; matching it keeps the frame transparent
+
       "html,body{margin:0;background:transparent;color:var(--g-fg);font:15px/1.4 system-ui,-apple-system,'Segoe UI',sans-serif}" +
       "*{box-sizing:border-box}button{font:inherit;color:inherit;cursor:pointer}button[disabled]{cursor:default}" +
       "#root{padding:4px 2px;min-width:0;overflow-x:auto}#root.locked [data-move],#root.locked [data-ui]{pointer-events:none}" +
@@ -1105,12 +1142,10 @@ ${FORMAT}`;
   let mode = "computer";
   function setMode(m) {
     mode = m;
-    $("modePass").setAttribute("aria-pressed", String(m === "pass"));
-    $("modeCpu").setAttribute("aria-pressed", String(m === "computer"));
+    $("modeSel").value = m;
     $("passOpts").hidden = m !== "pass";
   }
-  $("modePass").onclick = () => { setMode("pass"); startMatch(); };
-  $("modeCpu").onclick = () => { setMode("computer"); startMatch(); };
+  $("modeSel").onchange = () => { setMode($("modeSel").value); startMatch(); };
   $("pCount").onchange = () => startMatch();
   $("hideBetween").onchange = () => { if (match) step(); };
   $("restartBtn").onclick = () => startMatch();
@@ -1202,7 +1237,7 @@ ${FORMAT}`;
       return;
     }
     m.viewer = viewer;
-    if (mode === "computer") setStatus(dot(cur) + 'Your turn <span class="sub">You are ' + playerName(0) + "</span>");
+    if (mode === "computer") setStatus(dot(cur) + "Your turn");
     else setStatus(dot(cur) + playerName(cur) + "'s turn");
     sendStateChange({ message_kind: "state_change", state: m.state, turn_of_user: { player_index: cur, kind: "human" }, my_user: { player_index: viewer, kind: "human" }, players: m.players });
   }

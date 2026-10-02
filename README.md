@@ -6,11 +6,13 @@ GameBuilder is the creator side of the group platform in **Multiplayer Games** (
 
 ![Creating a game](docs/screenshots/new-game.png)
 
+The page follows the three steps of the course spec, shown in the top bar: **[1] describe → [2] play → [3] change**. On a game, the board is on the left with its rules, tutorial and code in tabs underneath, and the change panel is on the right.
+
 ## What it does
 
 | Step (from the course spec) | In GameBuilder |
 |---|---|
-| **Describe** the rules | Type a description and choose the allowed player totals (for example 2, 3 or 6, a set rather than a range). |
+| **Describe** the rules | Type a description and set the number of players. "Allow other counts" accepts a set of totals instead (for example 2, 3 or 6, not a range). |
 | **Generate** artifacts | The AI writes the game logic, the board UI, a computer opponent, the rules, a description and a tutorial. |
 | **Test** in the emulator | Every new version is played automatically before you see it. If a playtest finds a bug, the error goes back to the AI for one fix. Then play it yourself in pass-and-play (with "pass the device" screens) or against the computer. |
 | **Refine** | Chat to change rules, board size, players or looks. Each change is a new version, and any earlier version can be restored. |
@@ -56,9 +58,9 @@ Tic-Tac-Toe 3×3, the course's shared test game, is built in. Its moves use the 
 |---|---|
 | ![Play vs computer](docs/screenshots/play-vs-computer.png) | ![Pass and play](docs/screenshots/pass-and-play.png) |
 
-| Refined by chat (version 2) | Phone, dark mode |
+| Refined by chat (version 2) | Phone |
 |---|---|
-| ![Changed by chat](docs/screenshots/refine-by-chat.png) | ![Phone](docs/screenshots/phone-dark.png) |
+| ![Changed by chat](docs/screenshots/refine-by-chat.png) | ![Phone](docs/screenshots/phone.png) |
 
 ## Project layout
 
