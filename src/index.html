@@ -3,22 +3,22 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Unbounded:wght@500;700&display=swap">
 <style>
-/* Layout: a workshop bench. Left rail lists games; the bench shows the composer, or the game table beside the change chat. */
+/* Palette: lavender ground with a deep violet accent. Layout: a workshop bench. Left rail lists games; the bench shows the composer, or the game table beside the change chat. */
 :root {
-  --bg: #EDF0F3;
+  --bg: #F3EFFA;
   --surface: #FFFFFF;
-  --surface-2: #F5F7F9;
-  --ink: #16202A;
-  --muted: #586473;
-  --line: #D3DAE2;
-  --accent: #0B7A63;
+  --surface-2: #F8F5FD;
+  --ink: #1F1830;
+  --muted: #5F5772;
+  --line: #DCD2EC;
+  --accent: #6A45B8;
   --accent-ink: #FFFFFF;
-  --accent-soft: #D9EEE8;
-  --board: #1E5E4F;
+  --accent-soft: #E9E0F8;
+  --board: #4A3383;
   --warn-bg: #FFF4E0;
   --warn-ink: #7A4A00;
   --danger: #B42318;
-  --code-bg: #F3F5F8;
+  --code-bg: #F5F1FB;
   --p0: #E5484D; --p1: #E8B100; --p2: #3E7FE0; --p3: #2F9E66; --p4: #8E4EC6;
   --p5: #F07A2E; --p6: #0FA3B1; --p7: #D6409F; --p8: #6E7B8B; --p9: #8A6A3C;
   --font-display: "Unbounded", "Trebuchet MS", system-ui, sans-serif;
@@ -28,16 +28,16 @@
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #0E1318; --surface: #151C23; --surface-2: #1B242D; --ink: #E4EAF0; --muted: #94A1AF;
-    --line: #2A3540; --accent: #3BB79A; --accent-ink: #062019; --accent-soft: #12352D; --board: #17463B;
-    --warn-bg: #3A2A0E; --warn-ink: #F6CF8A; --danger: #F2766B; --code-bg: #10161C;
+    --bg: #14101F; --surface: #1C1729; --surface-2: #231D33; --ink: #ECE7F5; --muted: #A69EBA;
+    --line: #352D48; --accent: #B59EF2; --accent-ink: #1B1131; --accent-soft: #2F2549; --board: #3B2A66;
+    --warn-bg: #3A2A0E; --warn-ink: #F6CF8A; --danger: #F2766B; --code-bg: #171224;
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #0E1318; --surface: #151C23; --surface-2: #1B242D; --ink: #E4EAF0; --muted: #94A1AF;
-  --line: #2A3540; --accent: #3BB79A; --accent-ink: #062019; --accent-soft: #12352D; --board: #17463B;
-  --warn-bg: #3A2A0E; --warn-ink: #F6CF8A; --danger: #F2766B; --code-bg: #10161C;
+  --bg: #14101F; --surface: #1C1729; --surface-2: #231D33; --ink: #ECE7F5; --muted: #A69EBA;
+  --line: #352D48; --accent: #B59EF2; --accent-ink: #1B1131; --accent-soft: #2F2549; --board: #3B2A66;
+  --warn-bg: #3A2A0E; --warn-ink: #F6CF8A; --danger: #F2766B; --code-bg: #171224;
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
