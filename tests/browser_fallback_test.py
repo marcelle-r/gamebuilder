@@ -49,7 +49,8 @@ with sync_playwright() as p:
     pg.screenshot(path=str(OUT / "1_new.png"), full_page=True)
 
     # Tic-Tac-Toe example (shared test game, backend move format)
-    check(pg.evaluate("document.querySelector('#exCards .excard strong').textContent") == "Tic-Tac-Toe", "tic-tac-toe example listed first")
+    check(pg.evaluate("document.querySelector('#exCards .excard strong').textContent") == "Tic-Tac-Toe 3×3", "built-in test game is named Tic-Tac-Toe 3×3")
+    check("Built-in test game" in pg.inner_text("#exList"), "built-in game is labeled as the test game")
     pg.click("#exCards >> text=Tic-Tac-Toe")
     pg.wait_for_function("document.querySelector('#stage').shadowRoot.querySelector('.ttt')")
     pg.wait_for_function("document.querySelector('#status').textContent.includes('Your turn')")
@@ -99,6 +100,8 @@ with sync_playwright() as p:
     saved = pg.evaluate("Object.keys(window.__store)")
     check(len(saved) == 1 and saved[0].startswith("data/users/u1/"), "game saved to the private store")
     check(pg.locator("#myList").inner_text().count("Tic-Tac-Toe") == 1, "game listed under My games")
+    import re as _re
+    check(_re.search(r"Version 1 · \d{1,2}:\d{2}", pg.inner_text("#myList")) is not None, "My games shows the time each game was saved")
     pg.screenshot(path=str(OUT / "4_built.png"), full_page=True)
 
     # Change it by chatting

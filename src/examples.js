@@ -2,7 +2,7 @@
 // Kept as source strings because they run inside the sandboxed worker.
 
 const EXAMPLE_TIC_TAC_TOE = String.raw`const game = {
-  title: "Tic-Tac-Toe",
+  title: "Tic-Tac-Toe 3×3",
   allowedPlayers: [2],
   hiddenInformation: false,
   lines: [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]],
@@ -95,7 +95,7 @@ const EXAMPLES = [
   {
     id: "example-tic-tac-toe",
     example: true,
-    title: "Tic-Tac-Toe",
+    title: "Tic-Tac-Toe 3×3",
     description: "The course's shared test game: 3×3, X goes first, three in a row wins.",
     rules: "Two players take turns placing X and O on a 3×3 board. Three in a row across, down or diagonally wins. A full board is a draw. Moves use the backend's format: {\"type\": \"place\", \"cell\": 0-8}.",
     allowedPlayers: [2], hiddenInformation: false,

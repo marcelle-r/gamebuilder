@@ -205,7 +205,7 @@ summary { cursor: pointer; font-size: 14px; font-weight: 500; color: var(--muted
       <p class="savenote" id="saveNote" hidden></p>
     </section>
     <section>
-      <h3>Examples</h3>
+      <h3>Built-in</h3>
       <ul class="list" id="exList"></ul>
     </section>
   </aside>
@@ -232,7 +232,7 @@ summary { cursor: pointer; font-size: 14px; font-weight: 500; color: var(--muted
       </form>
       <div class="card progress" id="newProgress" hidden></div>
       <div>
-        <h2 style="font-size:15px;margin-bottom:10px">Or open an example</h2>
+        <h2 style="font-size:15px;margin-bottom:10px">Or try the built-in test game</h2>
         <div class="examples" id="exCards"></div>
       </div>
     </section>
@@ -481,7 +481,7 @@ How render works:
 - Show useful context in the game area (scores, cards in hand, the last move). The page already shows whose turn it is and the final result.`;
 
   const FORMAT = `Reply in exactly this format and nothing else:
-<game_meta>{"title":"...","description":"one sentence a player would read","rules":"the rules in 2 to 4 plain sentences","tutorial":["3 to 5 short steps that teach a new player, each one sentence"],"allowedPlayers":[2],"hiddenInformation":false}</game_meta>
+<game_meta>{"title":"a short, specific name; include the board size or variant when it is not the classic game, e.g. Tic-Tac-Toe 4×4","description":"one sentence a player would read","rules":"the rules in 2 to 4 plain sentences","tutorial":["3 to 5 short steps that teach a new player, each one sentence"],"allowedPlayers":[2],"hiddenInformation":false}</game_meta>
 <game_code>
 const game = { ... };
 </game_code>
@@ -687,11 +687,11 @@ ${FORMAT}`;
   function renderSidebar() {
     const mine = myGames.slice().sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
     $("myList").innerHTML = mine.map((g) =>
-      '<li><button type="button" data-open="' + esc(g.id) + '"' + (current && current.id === g.id ? ' aria-current="true"' : "") + '><span class="t">' + esc(g.title || "Untitled game") + '</span><span class="m">' + playersLabel(g) + " · " + esc(statusLabel(g)) + "</span></button></li>"
+      '<li><button type="button" data-open="' + esc(g.id) + '"' + (current && current.id === g.id ? ' aria-current="true"' : "") + '><span class="t">' + esc(g.title || "Untitled game") + '</span><span class="m">' + playersLabel(g) + " · " + esc(statusLabel(g)) + (savedAt(g) ? " · " + esc(savedAt(g)) : "") + "</span></button></li>"
     ).join("");
     $("myEmpty").hidden = mine.length > 0;
     $("exList").innerHTML = EXAMPLES.map((g) =>
-      '<li><button type="button" data-open="' + g.id + '"' + (current && current.id === g.id ? ' aria-current="true"' : "") + '><span class="t">' + esc(g.title) + '</span><span class="m">Example · ' + playersLabel(g) + "</span></button></li>"
+      '<li><button type="button" data-open="' + g.id + '"' + (current && current.id === g.id ? ' aria-current="true"' : "") + '><span class="t">' + esc(g.title) + '</span><span class="m">Built-in test game · ' + playersLabel(g) + "</span></button></li>"
     ).join("");
   }
   function allowedOf(g) {
@@ -772,7 +772,15 @@ ${FORMAT}`;
   }
 
   function curN(rec) { return (rec.versions || []).slice(-1)[0]?.n || 1; }
-  function statusLabel(rec) { return rec.example ? "Example" : "Version " + curN(rec); }
+  function statusLabel(rec) { return rec.example ? "Built-in test game" : "Version " + curN(rec); }
+  function savedAt(rec) {
+    const t = rec.updatedAt || rec.createdAt;
+    if (!t) return "";
+    const d = new Date(t), now = new Date();
+    return d.toDateString() === now.toDateString()
+      ? d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })
+      : d.toLocaleDateString([], { month: "short", day: "numeric" });
+  }
   function renderHeadTags(rec) {
     $("gTags").innerHTML =
       '<span class="tag accent">' + playersLabel(rec) + "</span>" +

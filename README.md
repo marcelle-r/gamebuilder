@@ -16,7 +16,7 @@ GameBuilder is the creator side of the group platform in **Multiplayer Games** (
 | **Refine** | Chat to change rules, board size, players or looks. Each change is a new version, and any earlier version can be restored. |
 | **My games** | Create, open and delete your games. They are saved privately per user. |
 
-Tic-Tac-Toe, the course's shared test game, is built in as an example. Its moves use the same format as the backend's reference engine: `{"type": "place", "cell": 0-8}`.
+Tic-Tac-Toe 3×3, the course's shared test game, is built in. Its moves use the same format as the backend's reference engine: `{"type": "place", "cell": 0-8}`.
 
 ## How it works
 
