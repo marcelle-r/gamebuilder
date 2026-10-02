@@ -1,0 +1,14 @@
+{
+  "name": "gamebuilder",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Describe a turn-based game, and AI writes it, playtests it in a sandbox, and lets you play and refine it.",
+  "scripts": {
+    "build": "node scripts/build.js",
+    "test": "node tests/harness.test.js",
+    "test:browser": "npm run build && python3 tests/browser_fallback_test.py && python3 tests/browser_iframe_test.py"
+  },
+  "engines": {
+    "node": ">=22.6"
+  }
+}
