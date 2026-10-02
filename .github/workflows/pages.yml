@@ -1,0 +1,41 @@
+name: Publish to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Build the page
+        run: npm run build
+      - name: Wrap it as a full web page
+        run: |
+          mkdir -p _site
+          {
+            echo '<!doctype html><html lang="en"><head><meta charset="utf-8">'
+            echo '<meta name="viewport" content="width=device-width,initial-scale=1"></head><body>'
+            cat dist/gamebuilder.html
+            echo '</body></html>'
+          } > _site/index.html
+      - uses: actions/upload-pages-artifact@v3
+      - id: deployment
+        uses: actions/deploy-pages@v4
