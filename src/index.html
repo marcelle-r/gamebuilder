@@ -1,0 +1,1391 @@
+<title>GameBuilder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Unbounded:wght@500;700&display=swap">
+<style>
+/* Layout: a workshop bench. Left rail lists games; the bench shows the composer, or the game table beside the change chat. */
+:root {
+  --bg: #EDF0F3;
+  --surface: #FFFFFF;
+  --surface-2: #F5F7F9;
+  --ink: #16202A;
+  --muted: #586473;
+  --line: #D3DAE2;
+  --accent: #0B7A63;
+  --accent-ink: #FFFFFF;
+  --accent-soft: #D9EEE8;
+  --board: #1E5E4F;
+  --warn-bg: #FFF4E0;
+  --warn-ink: #7A4A00;
+  --danger: #B42318;
+  --code-bg: #F3F5F8;
+  --p0: #E5484D; --p1: #E8B100; --p2: #3E7FE0; --p3: #2F9E66; --p4: #8E4EC6;
+  --p5: #F07A2E; --p6: #0FA3B1; --p7: #D6409F; --p8: #6E7B8B; --p9: #8A6A3C;
+  --font-display: "Unbounded", "Trebuchet MS", system-ui, sans-serif;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --radius: 12px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0E1318; --surface: #151C23; --surface-2: #1B242D; --ink: #E4EAF0; --muted: #94A1AF;
+    --line: #2A3540; --accent: #3BB79A; --accent-ink: #062019; --accent-soft: #12352D; --board: #17463B;
+    --warn-bg: #3A2A0E; --warn-ink: #F6CF8A; --danger: #F2766B; --code-bg: #10161C;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0E1318; --surface: #151C23; --surface-2: #1B242D; --ink: #E4EAF0; --muted: #94A1AF;
+  --line: #2A3540; --accent: #3BB79A; --accent-ink: #062019; --accent-soft: #12352D; --board: #17463B;
+  --warn-bg: #3A2A0E; --warn-ink: #F6CF8A; --danger: #F2766B; --code-bg: #10161C;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { height: 100%; }
+body { background: var(--bg); color: var(--ink); font: 15px/1.5 var(--font-body); }
+button, input, select, textarea { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+h1, h2, h3 { margin: 0; text-wrap: balance; }
+
+.top { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 20px; border-bottom: 1px solid var(--line); background: var(--surface); }
+.brand { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; min-width: 0; }
+.logo { font: 700 19px/1 var(--font-display); letter-spacing: -0.01em; }
+.logo span { color: var(--accent); }
+.tagline { color: var(--muted); font-size: 13px; }
+.who { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); white-space: nowrap; }
+.avatar { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); font-weight: 600; font-size: 12px; }
+
+.shell { display: grid; grid-template-columns: 250px minmax(0, 1fr); min-height: calc(100% - 59px); }
+.side { border-right: 1px solid var(--line); padding: 18px 14px; display: flex; flex-direction: column; gap: 22px; background: var(--surface-2); }
+.side h3 { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; padding-left: 8px; }
+.list { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.list button { width: 100%; text-align: left; border: 0; background: transparent; padding: 8px; border-radius: 8px; cursor: pointer; display: grid; gap: 1px; }
+.list button:hover { background: var(--surface); }
+.list button[aria-current="true"] { background: var(--accent-soft); }
+.list .t { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.list .m { font-size: 12px; color: var(--muted); }
+.empty { font-size: 13px; color: var(--muted); padding: 0 8px; margin: 0; }
+.savenote { font-size: 12px; color: var(--muted); padding: 0 8px; margin: 6px 0 0; }
+
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 40px; padding: 0 16px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); cursor: pointer; font-weight: 500; }
+.btn:hover { border-color: var(--muted); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.btn.primary:hover { filter: brightness(1.06); }
+.btn:disabled { opacity: 0.55; cursor: not-allowed; }
+.btn.small { min-height: 32px; padding: 0 12px; font-size: 13px; border-radius: 8px; }
+.btn.danger { color: var(--danger); }
+.linkish { border: 0; background: none; padding: 0; color: var(--accent); cursor: pointer; font-weight: 500; }
+
+main { padding: 26px clamp(16px, 3vw, 36px) 48px; min-width: 0; }
+
+/* Composer */
+.composer { max-width: 760px; display: grid; gap: 18px; }
+.eyebrow { font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); font-weight: 600; }
+.composer h1 { font: 700 clamp(24px, 3.4vw, 34px)/1.15 var(--font-display); letter-spacing: -0.02em; }
+.lede { margin: 0; color: var(--muted); max-width: 62ch; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; }
+.prompt { width: 100%; min-height: 110px; resize: vertical; border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; background: var(--surface-2); line-height: 1.5; }
+.row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.row.end { justify-content: space-between; }
+.field { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; color: var(--muted); }
+select { min-height: 36px; border: 1px solid var(--line); border-radius: 8px; padding: 0 8px; background: var(--surface); }
+.counts { display: flex; flex-wrap: wrap; gap: 4px; }
+.counts button { width: 34px; height: 34px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); cursor: pointer; font-variant-numeric: tabular-nums; }
+.counts button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { text-align: left; border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 6px 12px; font-size: 13px; cursor: pointer; }
+.chip:hover { border-color: var(--accent); color: var(--accent); }
+.examples { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+.excard { text-align: left; cursor: pointer; display: grid; gap: 6px; }
+.excard:hover { border-color: var(--accent); }
+.excard strong { font-size: 16px; }
+.excard span { font-size: 13px; color: var(--muted); }
+.notice { background: var(--warn-bg); color: var(--warn-ink); border-radius: 10px; padding: 10px 14px; font-size: 14px; margin: 0; }
+
+/* Build progress */
+.progress { display: grid; gap: 12px; }
+.steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; font-size: 14px; }
+.steps li { display: flex; gap: 10px; align-items: baseline; color: var(--muted); }
+.steps li::before { content: ""; width: 10px; height: 10px; border-radius: 50%; border: 2px solid var(--line); flex: none; transform: translateY(1px); }
+.steps li.on { color: var(--ink); }
+.steps li.on::before { border-color: var(--accent); border-top-color: transparent; animation: spin 0.8s linear infinite; }
+.steps li.done::before { background: var(--accent); border-color: var(--accent); }
+.steps li.fail { color: var(--danger); }
+.steps li.fail::before { background: var(--danger); border-color: var(--danger); }
+@keyframes spin { to { transform: translateY(1px) rotate(360deg); } }
+.stream { margin: 0; max-height: 220px; overflow: auto; background: var(--code-bg); border: 1px solid var(--line); border-radius: 10px; padding: 12px; font: 12px/1.5 var(--font-mono); white-space: pre-wrap; word-break: break-word; color: var(--muted); }
+.err { color: var(--danger); font-size: 14px; margin: 0; }
+
+/* Game workspace */
+.ghead { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
+.ghead h1 { font: 700 clamp(22px, 3vw, 30px)/1.15 var(--font-display); letter-spacing: -0.02em; }
+.ghead p { margin: 4px 0 8px; color: var(--muted); max-width: 70ch; }
+.tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.tag { font-size: 12px; padding: 3px 9px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); color: var(--muted); }
+.tag.accent { background: var(--accent-soft); border-color: transparent; color: var(--accent); font-weight: 500; }
+.work { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(280px, 1fr); gap: 18px; align-items: start; }
+.play, .chat { display: grid; gap: 14px; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.seg button { border: 0; background: var(--surface); padding: 0 12px; min-height: 36px; cursor: pointer; font-size: 14px; }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--surface); }
+.check { display: inline-flex; gap: 6px; align-items: center; font-size: 14px; color: var(--muted); }
+.status { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; min-height: 32px; font-weight: 500; }
+.dot { width: 12px; height: 12px; border-radius: 50%; flex: none; }
+.status .sub { color: var(--muted); font-weight: 400; font-size: 14px; }
+.stagewrap { position: relative; min-height: 260px; }
+#stage {
+  display: block; padding: 6px 0;
+  --g-bg: var(--surface-2); --g-surface: var(--surface); --g-fg: var(--ink); --g-muted: var(--muted); --g-line: var(--line);
+  --g-accent: var(--accent); --g-accent-ink: var(--accent-ink); --g-board: var(--board);
+  --g-p0: var(--p0); --g-p1: var(--p1); --g-p2: var(--p2); --g-p3: var(--p3); --g-p4: var(--p4);
+  --g-p5: var(--p5); --g-p6: var(--p6); --g-p7: var(--p7); --g-p8: var(--p8); --g-p9: var(--p9);
+}
+.handoff { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; gap: 14px; text-align: center; background: var(--surface); border-radius: 10px; padding: 20px; }
+.handoff strong { font: 700 22px/1.2 var(--font-display); }
+.handoff p { margin: 0; color: var(--muted); max-width: 36ch; }
+.resultbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; background: var(--accent-soft); border-radius: 10px; padding: 12px 14px; }
+.resultbar strong { font-size: 17px; }
+.resultbar span { color: var(--muted); font-size: 14px; }
+.bug { border: 1px solid var(--danger); border-radius: 10px; padding: 12px 14px; display: grid; gap: 8px; }
+.bug p { margin: 0; font-size: 14px; }
+.bug code { font: 12px/1.5 var(--font-mono); color: var(--danger); word-break: break-word; }
+details { border-top: 1px solid var(--line); padding-top: 10px; }
+summary { cursor: pointer; font-size: 14px; font-weight: 500; color: var(--muted); }
+.log { margin: 10px 0 0; max-height: 260px; overflow: auto; background: var(--code-bg); border-radius: 10px; padding: 10px; font: 12px/1.5 var(--font-mono); white-space: pre-wrap; word-break: break-word; }
+.log .k { color: var(--accent); }
+.chat h2 { font-size: 16px; font-weight: 600; }
+.chat .hint { margin: 0; font-size: 13px; color: var(--muted); }
+.bubbles { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; max-height: 340px; overflow: auto; }
+.bubbles li { padding: 9px 12px; border-radius: 12px; font-size: 14px; max-width: 92%; }
+.bubbles li.user { justify-self: end; background: var(--ink); color: var(--surface); border-bottom-right-radius: 4px; }
+.bubbles li.ai { justify-self: start; background: var(--surface-2); border: 1px solid var(--line); border-bottom-left-radius: 4px; }
+.bubbles li small { display: block; font-size: 11px; opacity: 0.7; margin-top: 2px; }
+.chatform { display: grid; gap: 8px; }
+.chatform textarea { min-height: 72px; resize: vertical; border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; background: var(--surface-2); }
+.versions { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 6px; font-size: 13px; }
+.versions li { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+.versions li span { color: var(--muted); }
+.rules { margin: 10px 0 0; font-size: 14px; }
+.code { margin: 10px 0 0; max-height: 320px; overflow: auto; background: var(--code-bg); border-radius: 10px; padding: 10px; font: 12px/1.5 var(--font-mono); white-space: pre; }
+#frameHost iframe { display: block; width: 100%; height: 320px; border: 0; background: transparent; }
+.tutorial { margin: 10px 0 0; padding-left: 20px; font-size: 14px; display: grid; gap: 4px; }
+.langbody { margin-top: 10px; font-size: 14px; display: grid; gap: 6px; }
+.langbody h4 { margin: 0; font-size: 15px; }
+.langbody p, .langbody ol { margin: 0; }
+.langbody ol { padding-inline-start: 20px; }
+.toast { position: fixed; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--ink); color: var(--surface); padding: 10px 16px; border-radius: 10px; font-size: 14px; max-width: min(90vw, 460px); box-shadow: 0 8px 24px rgba(0,0,0,.2); }
+
+@media (max-width: 900px) {
+  .work { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 720px) {
+  .shell { grid-template-columns: minmax(0, 1fr); }
+  .side { border-right: 0; border-bottom: 1px solid var(--line); padding: 14px 16px; gap: 14px; }
+  .side .list { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+  .tagline { display: none; }
+  .top { padding: 12px 16px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .steps li.on::before { animation: none; }
+}
+</style>
+
+<header class="top">
+  <div class="brand">
+    <div class="logo">Game<span>Builder</span></div>
+    <div class="tagline">Describe a game. Play it. Change it.</div>
+  </div>
+  <div class="who" id="who"><span class="avatar" id="avatar">?</span><span id="whoName">Connecting…</span></div>
+</header>
+
+<div class="shell">
+  <aside class="side">
+    <button class="btn primary" id="newBtn" type="button">New game</button>
+    <section>
+      <h3>My games</h3>
+      <ul class="list" id="myList"></ul>
+      <p class="empty" id="myEmpty">Games you build appear here.</p>
+      <p class="savenote" id="saveNote" hidden></p>
+    </section>
+    <section>
+      <h3>Examples</h3>
+      <ul class="list" id="exList"></ul>
+    </section>
+  </aside>
+
+  <main>
+    <section id="viewNew" class="composer">
+      <div>
+        <div class="eyebrow">New game</div>
+        <h1>Describe a game and play it in a minute</h1>
+      </div>
+      <p class="lede">GameBuilder writes the rules, the board and a computer opponent, tests the code by playing it, and runs it in a sandbox. Then play it on one device or against the computer, and change it by chatting.</p>
+      <p class="notice" id="noAi" hidden>Building games needs Claude, which isn't available in this view. You can still play the example games.</p>
+      <form class="card" id="newForm" style="display:grid;gap:12px">
+        <label for="newPrompt" style="font-weight:500">What should we build?</label>
+        <textarea class="prompt" id="newPrompt" placeholder="Example: Tic-Tac-Toe on a 3×3 board"></textarea>
+        <div class="row end">
+          <div class="row">
+            <span class="field" id="plLabel">Allowed players</span>
+            <div class="counts" id="counts" role="group" aria-labelledby="plLabel"></div>
+          </div>
+          <button class="btn primary" id="buildBtn" type="submit">Build game</button>
+        </div>
+        <div class="chips" id="ideas"></div>
+      </form>
+      <div class="card progress" id="newProgress" hidden></div>
+      <div>
+        <h2 style="font-size:15px;margin-bottom:10px">Or open an example</h2>
+        <div class="examples" id="exCards"></div>
+      </div>
+    </section>
+
+    <section id="viewGame" hidden>
+      <div class="ghead">
+        <div style="min-width:0">
+          <h1 id="gTitle"></h1>
+          <p id="gDesc"></p>
+          <div class="tags" id="gTags"></div>
+        </div>
+        <div class="row" id="gActions"></div>
+      </div>
+
+      <div class="work">
+        <section class="play card">
+          <div class="row end">
+            <div class="row">
+              <div class="seg" role="group" aria-label="How to play">
+                <button type="button" id="modePass" aria-pressed="false">Pass and play</button>
+                <button type="button" id="modeCpu" aria-pressed="true">Vs computer</button>
+              </div>
+              <span class="field">Players <select id="pCount" aria-label="Number of players"></select></span>
+            </div>
+            <button class="btn small" id="restartBtn" type="button">New match</button>
+          </div>
+          <div class="row" id="passOpts">
+            <label class="check"><input type="checkbox" id="hideBetween"> Hide the screen between turns</label>
+            <span class="field">View as <select id="viewAs" aria-label="View the game as"></select></span>
+          </div>
+          <div class="bug" id="bug" hidden>
+            <p><strong>This version of the game has a bug.</strong></p>
+            <code id="bugMsg"></code>
+            <div class="row"><button class="btn small primary" id="fixBtn" type="button">Ask AI to fix it</button></div>
+          </div>
+          <div class="status" id="status"></div>
+          <div class="stagewrap">
+            <div id="frameHost"></div>
+            <div id="stage" hidden></div>
+            <div class="handoff" id="handoff" hidden>
+              <strong id="handoffTitle"></strong>
+              <p>Hand the device over. The next player taps the button when nobody else is looking.</p>
+              <button class="btn primary" id="handoffBtn" type="button"></button>
+            </div>
+          </div>
+          <div class="resultbar" id="resultBar" hidden>
+            <div><strong id="resultText"></strong><br><span id="resultSub"></span></div>
+            <button class="btn small primary" id="againBtn" type="button">Play again</button>
+          </div>
+          <details>
+            <summary>Game API messages</summary>
+            <div class="log" id="apiLog"></div>
+          </details>
+        </section>
+
+        <aside class="chat card">
+          <h2>Change the game</h2>
+          <p class="hint" id="chatHint">Ask for any change: rules, board size, number of players, looks, or a smarter computer.</p>
+          <ol class="bubbles" id="bubbles"></ol>
+          <div class="progress" id="chatProgress" hidden></div>
+          <form class="chatform" id="chatForm">
+            <label for="chatInput" class="hint">Your change</label>
+            <textarea id="chatInput" placeholder="Example: make the board 4×4 with 4 in a row"></textarea>
+            <button class="btn primary" id="sendBtn" type="submit">Update game</button>
+          </form>
+          <details>
+            <summary>Rules</summary>
+            <p class="rules" id="gRules"></p>
+          </details>
+          <details>
+            <summary>Tutorial</summary>
+            <ol class="tutorial" id="gTutorial"></ol>
+          </details>
+          <details>
+            <summary>Languages</summary>
+            <div class="row" style="margin-top:10px">
+              <div class="seg" role="group" aria-label="Language" id="langTabs">
+                <button type="button" data-lang="en" aria-pressed="true">English</button>
+                <button type="button" data-lang="es" aria-pressed="false">Español</button>
+                <button type="button" data-lang="he" aria-pressed="false">עברית</button>
+              </div>
+              <button class="btn small" type="button" id="translateBtn">Generate translations</button>
+            </div>
+            <div class="langbody" id="langBody"></div>
+          </details>
+          <details>
+            <summary>Versions</summary>
+            <ol class="versions" id="versions"></ol>
+          </details>
+          <details>
+            <summary>Code</summary>
+            <pre class="code" id="gCode"></pre>
+          </details>
+          <details>
+            <summary>Package for the backend</summary>
+            <p class="hint" style="margin-top:10px">The JSON bodies for the backend's <code>POST /games</code> and <code>POST /games/{id}/versions</code>. The game code goes in <code>rulesArtifact</code>. <span id="pkgHint"></span></p>
+            <div class="row" style="margin-top:8px"><button class="btn small" type="button" id="copyPkg">Copy JSON</button></div>
+            <pre class="code" id="pkg"></pre>
+          </details>
+        </aside>
+      </div>
+    </section>
+  </main>
+</div>
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script>
+/*__EXAMPLES__*/
+/*__HARNESS__*/
+
+(function () {
+  "use strict";
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  const newId = () => "g" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  const playerName = (i) => "Player " + (i + 1);
+  const pColor = (i) => "var(--p" + (i % 10) + ")";
+
+  const IDEAS = [
+    "Tic-Tac-Toe on a 3×3 board",
+    "Tic-Tac-Toe on a 4×4 board, 4 in a row wins",
+    "Nim: 3 piles of 3, 5 and 7 stones, whoever takes the last stone loses",
+    "Dots and Boxes on a 3×3 grid",
+    "Crazy Eights for 2 to 4 players",
+    "Reversi on a 6×6 board",
+    "Memory: find matching pairs of 16 face-down cards",
+  ];
+
+  const caps = { sample: null, db: null, user: null };
+  let uid = null;
+  let myGames = [];
+  let current = null;
+  let runner = null;
+  let meta = null;
+  let match = null;
+  let building = null;
+  let saveQueue = Promise.resolve();
+  let canSave = false;
+
+  /* ---------- Toast ---------- */
+  let toastTimer;
+  function toast(text) {
+    const t = $("toast");
+    t.textContent = text;
+    t.hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { t.hidden = true; }, 3200);
+  }
+
+  /* ---------- Sanitizing the game's HTML ---------- */
+  const BAD_TAGS = new Set(["SCRIPT", "STYLE", "IFRAME", "OBJECT", "EMBED", "LINK", "META", "BASE", "FORM", "FRAME", "FRAMESET", "NOSCRIPT", "TEMPLATE", "FOREIGNOBJECT", "AUDIO", "VIDEO", "SOURCE", "PORTAL"]);
+  const URL_ATTRS = new Set(["href", "src", "xlink:href", "action", "formaction", "srcset", "poster", "background", "data", "ping"]);
+  function sanitizeHtml(html) {
+    const doc = new DOMParser().parseFromString("<body>" + html + "</body>", "text/html");
+    const walk = (el) => {
+      for (const child of Array.from(el.children)) {
+        if (BAD_TAGS.has(child.tagName.toUpperCase())) { child.remove(); continue; }
+        for (const attr of Array.from(child.attributes)) {
+          const name = attr.name.toLowerCase();
+          if (name.startsWith("on") || name === "srcdoc" || name === "target") child.removeAttribute(attr.name);
+          else if (URL_ATTRS.has(name)) {
+            const v = attr.value.trim().toLowerCase();
+            if (!(v.startsWith("#") || v.startsWith("data:image/"))) child.removeAttribute(attr.name);
+          } else if (name === "style" && /url\s*\(|expression|@import/i.test(attr.value)) child.removeAttribute(attr.name);
+        }
+        walk(child);
+      }
+    };
+    walk(doc.body);
+    return doc.body.innerHTML;
+  }
+  function sanitizeCss(css) {
+    return String(css)
+      .replace(/<\/?style[^>]*>/gi, "")
+      .replace(/@import[^;]*;?/gi, "")
+      .replace(/url\s*\([^)]*\)/gi, "none")
+      .replace(/position\s*:\s*fixed/gi, "position:absolute");
+  }
+
+  /* ---------- Sandbox runner (one Web Worker per game version) ---------- */
+  function makeRunner(code) {
+    const url = URL.createObjectURL(new Blob([code + "\n" + HARNESS], { type: "text/javascript" }));
+    const pending = new Map();
+    let seq = 0, dead = null, worker;
+    let readyOk, readyFail;
+    const ready = new Promise((res, rej) => { readyOk = res; readyFail = rej; });
+    const failAll = (text) => {
+      dead = text;
+      readyFail(new Error(text));
+      for (const p of pending.values()) { clearTimeout(p.t); p.rej(new Error(text)); }
+      pending.clear();
+    };
+    try {
+      worker = new Worker(url);
+    } catch (e) {
+      failAll("The sandbox could not start: " + (e && e.message));
+      return { ready, call: () => Promise.reject(new Error(dead)), stop() {} };
+    }
+    worker.onmessage = (e) => {
+      const d = e.data || {};
+      if (d.id === 0) { readyOk(); return; }
+      const p = pending.get(d.id);
+      if (!p) return;
+      pending.delete(d.id);
+      clearTimeout(p.t);
+      d.ok ? p.res(d.value) : p.rej(Object.assign(new Error(d.error), { fromGame: true }));
+    };
+    worker.onerror = (e) => {
+      e.preventDefault();
+      failAll((e.message || "The game code could not run") + (e.lineno ? " (line " + e.lineno + ")" : ""));
+    };
+    const readyWithTimeout = Promise.race([
+      ready,
+      sleep(5000).then(() => { throw new Error("The game code did not start within 5 seconds."); }),
+    ]);
+    return {
+      ready: readyWithTimeout,
+      call(kind, args, ms = 4000) {
+        if (dead) return Promise.reject(new Error(dead));
+        return new Promise((res, rej) => {
+          const id = ++seq;
+          const t = setTimeout(() => {
+            pending.delete(id);
+            worker.terminate();
+            failAll("The game code took too long to answer. It may be stuck in a loop.");
+            rej(new Error(dead));
+          }, ms);
+          pending.set(id, { res, rej, t });
+          worker.postMessage({ id, kind, args });
+        });
+      },
+      stop() { try { worker.terminate(); } catch (e) {} URL.revokeObjectURL(url); },
+    };
+  }
+
+  /* ---------- Prompting ---------- */
+  const CONTRACT = `You are writing a turn-based multiplayer game for a web game builder. Write plain JavaScript with no import/export, no DOM access, no timers, no network and no Math.random (use the random() function you are given). The code runs in an isolated sandbox and must define exactly one top-level constant:
+
+const game = {
+  title: "Short name",
+  allowedPlayers: [2, 3, 6],     // every total number of players the game supports, 1-10 (a list, not a range)
+  hiddenInformation: false,      // true when players hold secrets (such as cards in hand)
+
+  init(numPlayers, random) { /* return the starting state */ },
+  currentPlayer(state) { /* index 0..numPlayers-1 of the player who must move, or null when the game is over */ },
+  legalMoves(state) { /* array of every legal move for the current player; never empty while the game is not over */ },
+  applyMove(state, move, random) { /* return a NEW state; throw new Error("short reason a player can read") if the move is illegal */ },
+  result(state) { /* null while playing; when over: { winners: [player indices], summary: "one sentence" }; winners [] means a draw */ },
+  computerMove(state, random) { /* optional: a sensible move for the current player (win or block when possible); must be one of legalMoves(state) */ },
+  render(state, viewer, ui) { /* return { html, css }, see below */ }
+};
+
+Rules for the code:
+- state and every move are plain JSON data (objects, arrays, strings, numbers, booleans, null). Keep the number of players in the state. Never put functions or class instances in state.
+- Every move from legalMoves must be accepted by applyMove, and applyMove accepts nothing else.
+- Name moves by their action, for example {"type":"place","cell":4} for placing a mark, {"type":"draw"} for drawing a card. For Tic-Tac-Toe-style games use exactly {"type":"place","cell":index} with cells numbered row by row from 0, and the marks "X" (player 0) and "O" (player 1).
+- The game must always end: add a move limit or a draw rule if needed.
+- Call your own methods with this (for example this.result(state)). You may add helper methods and constants as extra properties of game.
+- Keep the code under about 400 lines.
+
+How render works:
+- render(state, viewer, ui) returns { html: "...", css: "..." }. viewer is the index of the player looking at the screen, or -1 for a spectator at the end of the game, when everything may be revealed. If hiddenInformation is true and viewer >= 0, show only that player's secrets and show other players' secrets face down (for example as a card count).
+- Make every clickable thing a <button>. A click on an element with data-move='...' submits that move; the attribute value must be exactly the move as JSON. Build it as: "data-move='" + JSON.stringify(move).replace(/'/g, "&#39;") + "'".
+- A click on an element with data-ui='{"key":"value"}' merges that object into ui and re-renders (a null value removes the key). ui starts as {} and is cleared after every move. Use ui for choices that take several clicks (pick a piece, then a square).
+- Enable move buttons only when it is the viewer's turn (currentPlayer(state) === viewer); disable the rest.
+- No <script>, no inline event handlers, no external images, fonts or links. Draw with HTML, CSS, inline SVG and Unicode symbols.
+- The css is scoped to the game area. Use these CSS variables for every color so the game works in light and dark mode: --g-bg (background), --g-surface (panels), --g-fg (text), --g-muted (secondary text), --g-line (borders), --g-accent and --g-accent-ink (highlight, and text on it), --g-board (a board or table surface; white text reads on it), --g-p0 to --g-p9 (one color per player).
+- The game area is 320px to 640px wide. Use flexible layouts (grid, flex, percentages, aspect-ratio). Buttons at least 36px tall.
+- Show useful context in the game area (scores, cards in hand, the last move). The page already shows whose turn it is and the final result.`;
+
+  const FORMAT = `Reply in exactly this format and nothing else:
+<game_meta>{"title":"...","description":"one sentence a player would read","rules":"the rules in 2 to 4 plain sentences","tutorial":["3 to 5 short steps that teach a new player, each one sentence"],"allowedPlayers":[2],"hiddenInformation":false}</game_meta>
+<game_code>
+const game = { ... };
+</game_code>
+<notes>One or two plain sentences telling the user what you built or changed.</notes>`;
+
+  function promptNew(request, allowed) {
+    return `${CONTRACT}
+
+Build this game:
+"""${request}"""
+
+Set allowedPlayers to [${allowed.join(", ")}] (these are the only player totals the game supports), unless the request above clearly asks for different numbers.
+
+${FORMAT}`;
+  }
+  function promptChange(rec, request) {
+    return `${CONTRACT}
+
+Here is the current game: ${rec.title}. Rules: ${rec.rules || "(not written)"}
+<game_code>
+${rec.code}
+</game_code>
+
+The user asked for this change:
+"""${request}"""
+
+Return the complete updated game with the change, keeping everything else working. allowedPlayers is now [${allowedOf(rec).join(", ")}]; change it only if the user asked.
+
+${FORMAT}`;
+  }
+  function promptFix(rec, error) {
+    return `${CONTRACT}
+
+This game failed automatic testing:
+<game_code>
+${rec.code}
+</game_code>
+
+The error was:
+${error}
+
+Find the cause, fix it, and return the complete corrected game. Make sure legalMoves and applyMove agree, currentPlayer is null exactly when result is not null, and render returns { html, css }.
+
+${FORMAT}`;
+  }
+
+  function parseReply(text) {
+    const metaM = text.match(/<game_meta>([\s\S]*?)<\/game_meta>/);
+    const codeM = text.match(/<game_code>([\s\S]*?)(<\/game_code>|$)/);
+    const notesM = text.match(/<notes>([\s\S]*?)<\/notes>/);
+    if (!codeM) throw new Error("The reply didn't include any game code.");
+    let code = codeM[1].trim().replace(/^```[a-z]*\s*/i, "").replace(/```\s*$/, "").trim();
+    if (!/\bgame\b/.test(code)) throw new Error("The reply didn't define the game.");
+    let m = {};
+    if (metaM) {
+      try { m = JSON.parse(metaM[1].trim().replace(/^```[a-z]*\s*/i, "").replace(/```\s*$/, "")); } catch (e) { m = {}; }
+    }
+    return {
+      code,
+      title: String(m.title || ""),
+      description: String(m.description || ""),
+      rules: String(m.rules || ""),
+      tutorial: Array.isArray(m.tutorial) ? m.tutorial.map(String).slice(0, 8) : [],
+      notes: notesM ? notesM[1].trim() : "",
+    };
+  }
+
+  /* ---------- Build pipeline: write → test → fix once → done ---------- */
+  function progressUI(box) {
+    box.hidden = false;
+    box.innerHTML = '<div class="row end"><strong id="pTitle">Building…</strong><button class="btn small" type="button" data-stop>Stop</button></div>' +
+      '<ol class="steps"><li data-s="write">Writing the game</li><li data-s="test">Playtesting it in the sandbox</li><li data-s="fix" hidden>Fixing a bug found in testing</li><li data-s="done">Ready to play</li></ol>' +
+      '<pre class="stream" aria-live="off"></pre><p class="err" hidden></p>';
+    const step = (name, state) => {
+      const li = box.querySelector('[data-s="' + name + '"]');
+      if (!li) return;
+      li.hidden = false;
+      li.className = state || "";
+    };
+    return {
+      step,
+      stream(text) {
+        const pre = box.querySelector(".stream");
+        const i = text.indexOf("<game_code>");
+        const body = i >= 0 ? text.slice(i + 11) : text;
+        pre.textContent = (body.length > 1800 ? "…" + body.slice(-1800) : body).replace(/<\/game_code>[\s\S]*$/, "");
+        pre.scrollTop = pre.scrollHeight;
+        box.querySelector("#pTitle").textContent = "Writing… " + (text.length / 1024).toFixed(1) + " KB";
+      },
+      title(t) { box.querySelector("#pTitle").textContent = t; },
+      error(t) { const p = box.querySelector(".err"); p.textContent = t; p.hidden = false; },
+      onStop(fn) { box.querySelector("[data-stop]").onclick = fn; },
+      hideStop() { const b = box.querySelector("[data-stop]"); if (b) b.hidden = true; },
+      close() { box.hidden = true; box.innerHTML = ""; },
+    };
+  }
+
+  const SAMPLE_COPY = {
+    not_granted: "GameBuilder needs your permission to use Claude. Allow it when asked, then try again.",
+    sampling_disabled: "Claude isn't available for this account.",
+    rate_limited: "Too many requests right now. Wait a minute and try again.",
+    session_expired: "Your session expired. Sign in again and retry.",
+    refused: "Claude declined that request. Try describing the game differently.",
+    prompt_too_large: "The game's code got too long to send. Try a simpler change.",
+  };
+
+  async function build({ kind, request, base, error, allowed, box }) {
+    if (!caps.sample) throw new Error("Building games needs Claude, which isn't available in this view.");
+    const ui = progressUI(box);
+    const ctl = new AbortController();
+    building = ctl;
+    ui.onStop(() => ctl.abort());
+    setBusy(true);
+    try {
+      let prompt = kind === "new" ? promptNew(request, allowed) : kind === "change" ? promptChange(base, request) : promptFix(base, error);
+      let fixed = false;
+      for (let attempt = 0; attempt < 2; attempt++) {
+        ui.step(attempt === 0 ? "write" : "fix", "on");
+        let res;
+        try {
+          res = await caps.sample(prompt, { cache: false, signal: ctl.signal, onText: ({ text }) => ui.stream(text) });
+        } catch (e) {
+          if (e && e.code === "cancelled") throw Object.assign(new Error("Stopped."), { quiet: true });
+          if (e && e.code === "not_granted") { caps.sample = null; applyAiAvailability(); }
+          throw new Error(SAMPLE_COPY[e && e.code] || "Couldn't reach Claude. Try again.");
+        }
+        if (res.truncated) throw new Error("The game was too long to write in one go. Try a simpler description.");
+        const parsed = parseReply(res.text);
+        ui.step(attempt === 0 ? "write" : "fix", "done");
+        ui.step("test", "on");
+        ui.title("Playtesting…");
+        const r = makeRunner(parsed.code);
+        try {
+          await r.ready;
+          const m = await r.call("meta");
+          const smoke = await r.call("smoke", {}, 9000);
+          r.stop();
+          ui.step("test", "done");
+          ui.step("done", "done");
+          ui.title("Ready");
+          ui.hideStop();
+          return { parsed, meta: m, smoke, fixed };
+        } catch (e) {
+          r.stop();
+          if (attempt === 1) {
+            ui.step("test", "fail");
+            throw Object.assign(new Error("The game still has a bug after one fix: " + e.message), { parsed });
+          }
+          ui.step("test", "fail");
+          ui.title("Found a bug, fixing it…");
+          fixed = true;
+          prompt = promptFix({ ...parsed, title: parsed.title || "game" }, e.message);
+        }
+      }
+    } catch (e) {
+      ui.title(e.quiet ? "Stopped" : "Couldn't finish");
+      ui.hideStop();
+      if (!e.quiet) ui.error(e.message);
+      throw e;
+    } finally {
+      building = null;
+      setBusy(false);
+    }
+  }
+
+  function setBusy(on) {
+    $("buildBtn").disabled = on || !caps.sample;
+    $("sendBtn").disabled = on || !caps.sample;
+    $("fixBtn").disabled = on || !caps.sample;
+  }
+
+  /* ---------- Saving ---------- */
+  function toDoc(rec) {
+    return {
+      title: rec.title, description: rec.description, rules: rec.rules,
+      tutorial: rec.tutorial || [], translations: rec.translations || null, published: rec.published || null,
+      allowedPlayers: allowedOf(rec), hiddenInformation: !!rec.hiddenInformation,
+      code: rec.code,
+      chat: (rec.chat || []).slice(-24),
+      versions: (rec.versions || []).slice(-5),
+      createdAt: rec.createdAt || Date.now(), updatedAt: Date.now(),
+    };
+  }
+  function saveGame(rec) {
+    rec.updatedAt = Date.now();
+    const local = myGames.findIndex((g) => g.id === rec.id);
+    if (local >= 0) myGames[local] = rec; else myGames.unshift(rec);
+    renderSidebar();
+    if (!canSave) return;
+    saveQueue = saveQueue.then(() => caps.db.collection("data/users/" + uid).doc(rec.id).set(toDoc(rec))).catch((e) => {
+      canSave = false;
+      showSaveNote("Saving is off in this view, so games last until you close the page.");
+    });
+  }
+  function deleteGame(rec) {
+    myGames = myGames.filter((g) => g.id !== rec.id);
+    renderSidebar();
+    if (canSave) saveQueue = saveQueue.then(() => caps.db.collection("data/users/" + uid).doc(rec.id).delete()).catch(() => {});
+  }
+  function showSaveNote(t) { const n = $("saveNote"); n.textContent = t; n.hidden = !t; }
+
+  /* ---------- Sidebar ---------- */
+  function renderSidebar() {
+    const mine = myGames.slice().sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+    $("myList").innerHTML = mine.map((g) =>
+      '<li><button type="button" data-open="' + esc(g.id) + '"' + (current && current.id === g.id ? ' aria-current="true"' : "") + '><span class="t">' + esc(g.title || "Untitled game") + '</span><span class="m">' + playersLabel(g) + " · " + esc(statusLabel(g)) + "</span></button></li>"
+    ).join("");
+    $("myEmpty").hidden = mine.length > 0;
+    $("exList").innerHTML = EXAMPLES.map((g) =>
+      '<li><button type="button" data-open="' + g.id + '"' + (current && current.id === g.id ? ' aria-current="true"' : "") + '><span class="t">' + esc(g.title) + '</span><span class="m">Example · ' + playersLabel(g) + "</span></button></li>"
+    ).join("");
+  }
+  function allowedOf(g) {
+    if (Array.isArray(g.allowedPlayers) && g.allowedPlayers.length) return g.allowedPlayers.map(Number).sort((a, b) => a - b);
+    const out = [];
+    for (let n = g.minPlayers || 2; n <= (g.maxPlayers || g.minPlayers || 2); n++) out.push(n);
+    return out;
+  }
+  function playersLabel(g) {
+    const a = allowedOf(g);
+    const word = a.length === 1 && a[0] === 1 ? " player" : " players";
+    if (a.length === 1) return a[0] + word;
+    const contiguous = a.every((n, i) => i === 0 || n === a[i - 1] + 1);
+    if (contiguous) return a[0] + "–" + a[a.length - 1] + word;
+    return a.slice(0, -1).join(", ") + " or " + a[a.length - 1] + word;
+  }
+  document.addEventListener("click", (e) => {
+    const b = e.target.closest("[data-open]");
+    if (!b) return;
+    const id = b.getAttribute("data-open");
+    const rec = myGames.find((g) => g.id === id) || EXAMPLES.find((g) => g.id === id);
+    if (rec) openGame(rec);
+  });
+
+  /* ---------- Views ---------- */
+  function showNew() {
+    stopMatch();
+    current = null;
+    $("viewGame").hidden = true;
+    $("viewNew").hidden = false;
+    renderSidebar();
+    $("newPrompt").focus();
+  }
+  $("newBtn").onclick = showNew;
+
+  function fillSelect(sel, from, to, value) {
+    sel.innerHTML = "";
+    for (let i = from; i <= to; i++) sel.add(new Option(String(i), String(i), false, i === value));
+  }
+
+  async function openGame(rec) {
+    if (building) { toast("Wait for the current build to finish."); return; }
+    stopMatch();
+    current = rec;
+    $("viewNew").hidden = true;
+    $("viewGame").hidden = false;
+    $("gTitle").textContent = rec.title || "Untitled game";
+    $("gDesc").textContent = rec.description || "";
+    renderHeadTags(rec);
+    renderActions(rec);
+    $("gRules").textContent = rec.rules || "No rules written yet.";
+    $("gTutorial").innerHTML = (rec.tutorial || []).length ? rec.tutorial.map((t) => "<li>" + esc(t) + "</li>").join("") : "<li>No tutorial yet. Ask for one in the chat.</li>";
+    setLang("en");
+    $("gCode").textContent = rec.code;
+    $("pkg").textContent = JSON.stringify(backendPackage(rec), null, 2);
+    $("pkgHint").textContent = rec.example ? "" : rec.published ? "Uses published version " + rec.published.n + "." : "Not published yet, so this uses the current draft.";
+    $("chatHint").textContent = rec.example
+      ? "Ask for any change. Your changed version is saved under My games."
+      : "Ask for any change: rules, board size, number of players, looks, or a smarter computer.";
+    renderChat();
+    renderVersions();
+    $("bug").hidden = true;
+    $("chatProgress").hidden = true;
+    const allowed = allowedOf(rec);
+    $("pCount").innerHTML = allowed.map((n) => '<option value="' + n + '">' + n + "</option>").join("");
+    $("hideBetween").checked = !!rec.hiddenInformation;
+    fillViewAs(allowed[0]);
+    setMode(rec.hiddenInformation && allowed[allowed.length - 1] > 1 ? "pass" : "computer");
+    renderSidebar();
+    if (runner) runner.stop();
+    runner = makeRunner(rec.code);
+    try {
+      await runner.ready;
+      meta = await runner.call("meta");
+      if (current !== rec) return;
+      await mountGame(rec.code);
+      if (current !== rec) return;
+      await startMatch();
+    } catch (e) {
+      if (current === rec) showBug(e.message);
+    }
+  }
+
+  function backendPackage(rec) {
+    const slug = (rec.title || "game").toLowerCase().normalize("NFKD").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 60) || "game";
+    const n = rec.example ? 1 : rec.published ? rec.published.n : ((rec.versions || []).slice(-1)[0]?.n || 1);
+    const code = rec.published && !rec.example ? rec.published.code : rec.code;
+    const capabilities = { bots: true, midMatchJoin: false, spectators: true, passAndPlay: true, offline: true };
+    return {
+      "POST /games": { slug, name: rec.title || "Untitled game", description: rec.description || "" },
+      "POST /games/{id}/versions": {
+        engineKey: "gb-" + slug,
+        engineVersion: n,
+        manifest: {
+          gameKey: "gb-" + slug, version: n, name: rec.title, description: rec.description || "", rules: rec.rules || "",
+          players: { allowedCounts: allowedOf(rec) }, hiddenInformation: !!rec.hiddenInformation, capabilities, contract: "gamebuilder/1",
+        },
+        capabilities,
+        rulesArtifact: code,
+      },
+    };
+  }
+  function curN(rec) { return (rec.versions || []).slice(-1)[0]?.n || 1; }
+  function statusLabel(rec) {
+    if (rec.example) return "Example";
+    const n = curN(rec);
+    if (rec.published && rec.published.n === n) return "Published v" + n;
+    return "Draft v" + n + (rec.published ? " · published v" + rec.published.n : "");
+  }
+  function renderHeadTags(rec) {
+    $("gTags").innerHTML =
+      '<span class="tag accent">' + playersLabel(rec) + "</span>" +
+      '<span class="tag">' + esc(statusLabel(rec)) + "</span>" +
+      (rec.hiddenInformation ? '<span class="tag">Hidden hands</span>' : "");
+  }
+  function renderActions(rec) {
+    if (rec.example) { $("gActions").innerHTML = ""; return; }
+    const n = curN(rec);
+    const isPub = rec.published && rec.published.n === n;
+    $("gActions").innerHTML = (isPub ? "" : '<button class="btn small primary" type="button" id="pubBtn">Publish version ' + n + "</button>") +
+      '<button class="btn small danger" type="button" id="delBtn">Delete</button>';
+    $("delBtn").onclick = () => confirmDelete();
+    if (!isPub) $("pubBtn").onclick = () => {
+      const rec2 = { ...current, published: { n, at: Date.now(), code: current.code } };
+      current = rec2;
+      saveGame(rec2);
+      renderHeadTags(rec2);
+      renderActions(rec2);
+      renderVersions();
+      $("pkg").textContent = JSON.stringify(backendPackage(rec2), null, 2);
+      $("pkgHint").textContent = "Uses published version " + n + ".";
+      toast("Published version " + n + ". It won't change when you edit the draft.");
+    };
+  }
+
+  /* Languages */
+  let lang = "en";
+  function setLang(l) {
+    lang = l;
+    for (const b of $("langTabs").querySelectorAll("button")) b.setAttribute("aria-pressed", String(b.dataset.lang === l));
+    const rec = current;
+    if (!rec) return;
+    const t = l === "en" ? { title: rec.title, description: rec.description, rules: rec.rules, tutorial: rec.tutorial || [] } : rec.translations && rec.translations[l];
+    const body = $("langBody");
+    body.dir = l === "he" ? "rtl" : "ltr";
+    if (!t) { body.innerHTML = "<p>Not translated yet. Generate translations to review the Spanish and Hebrew rules and tutorial.</p>"; return; }
+    body.innerHTML = "<h4>" + esc(t.title || "") + "</h4><p>" + esc(t.description || "") + "</p><p>" + esc(t.rules || "") + "</p>" +
+      ((t.tutorial || []).length ? "<ol>" + t.tutorial.map((x) => "<li>" + esc(x) + "</li>").join("") + "</ol>" : "");
+  }
+  $("langTabs").addEventListener("click", (e) => { const b = e.target.closest("[data-lang]"); if (b) setLang(b.dataset.lang); });
+  $("translateBtn").onclick = async () => {
+    if (!caps.sample || !current) { toast("Translations need Claude, which isn't available in this view."); return; }
+    const rec = current;
+    const btn = $("translateBtn");
+    btn.disabled = true; btn.textContent = "Translating…";
+    const src = { title: rec.title, description: rec.description, rules: rec.rules, tutorial: rec.tutorial || [] };
+    try {
+      const out = await caps.sample.json(
+        "Translate this game's player-facing text into Spanish (es) and Hebrew (he). Keep game terms consistent and natural for players. " +
+        'Reply with only JSON: {"es":{"title":"","description":"","rules":"","tutorial":[""]},"he":{"title":"","description":"","rules":"","tutorial":[""]}}\n\n' + JSON.stringify(src),
+        { cache: false }
+      );
+      const ok = (x) => x && typeof x.title === "string" && typeof x.rules === "string";
+      if (!ok(out && out.es) || !ok(out && out.he)) throw new Error("bad");
+      const clean = (x) => ({ title: String(x.title), description: String(x.description || ""), rules: String(x.rules), tutorial: Array.isArray(x.tutorial) ? x.tutorial.map(String) : [] });
+      const rec2 = { ...rec, translations: { es: clean(out.es), he: clean(out.he) } };
+      if (current === rec) current = rec2;
+      if (!rec.example) saveGame(rec2); else EXAMPLES[EXAMPLES.findIndex((g) => g.id === rec.id)] = rec2;
+      setLang(lang === "en" ? "es" : lang);
+      toast("Translated into Spanish and Hebrew. Review them before publishing.");
+    } catch (e) {
+      toast(e && e.code && SAMPLE_COPY[e.code] ? SAMPLE_COPY[e.code] : "Couldn't translate right now. Try again.");
+    } finally {
+      btn.disabled = false; btn.textContent = "Generate translations";
+    }
+  };
+
+  $("copyPkg").onclick = () => {
+    const text = $("pkg").textContent;
+    const fallback = () => { const r = document.createRange(); r.selectNodeContents($("pkg")); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r); toast("Selected. Press Ctrl+C (or Cmd+C) to copy."); };
+    try { navigator.clipboard.writeText(text).then(() => toast("Copied the package JSON."), fallback); } catch (e) { fallback(); }
+  };
+
+  function confirmDelete() {
+    const box = $("gActions");
+    box.innerHTML = '<span class="field">Delete this game?</span><button class="btn small danger" type="button" id="delYes">Delete</button><button class="btn small" type="button" id="delNo">Keep</button>';
+    $("delYes").onclick = () => { const rec = current; deleteGame(rec); showNew(); toast("Deleted " + (rec.title || "game") + "."); };
+    $("delNo").onclick = () => openGame(current);
+  }
+
+  function renderChat() {
+    const chat = (current && current.chat) || [];
+    $("bubbles").innerHTML = chat.map((m) =>
+      '<li class="' + (m.role === "user" ? "user" : "ai") + '">' + esc(m.text) + (m.v ? "<small>Version " + m.v + "</small>" : "") + "</li>"
+    ).join("");
+    $("bubbles").scrollTop = $("bubbles").scrollHeight;
+  }
+  function renderVersions() {
+    const vs = (current && current.versions) || [];
+    if (!vs.length) { $("versions").innerHTML = '<li><span>Only the original version so far.</span></li>'; return; }
+    $("versions").innerHTML = vs.slice().reverse().map((v, i) =>
+      '<li><div><strong>Version ' + v.n + "</strong>" + (current.published && current.published.n === v.n ? ' <span class="tag accent">Published</span>' : "") + " <span>" + esc(v.note || "") + "</span></div>" +
+      (i === 0 ? "<span>Current</span>" : '<button class="linkish" type="button" data-restore="' + v.n + '">Use this</button>') + "</li>"
+    ).join("");
+  }
+  $("versions").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-restore]");
+    if (!b || !current) return;
+    const n = Number(b.getAttribute("data-restore"));
+    const v = current.versions.find((x) => x.n === n);
+    if (!v) return;
+    const next = (current.versions.slice(-1)[0]?.n || 1) + 1;
+    const rec = { ...current, code: v.code, versions: current.versions.concat({ n: next, note: "Restored version " + n, code: v.code, at: Date.now() }), chat: (current.chat || []).concat({ role: "ai", text: "Went back to version " + n + ".", v: next }) };
+    saveGame(rec);
+    openGame(rec);
+  });
+
+  /* ---------- New game ---------- */
+  let chosen = new Set([2]);
+  function renderCounts() {
+    $("counts").innerHTML = Array.from({ length: 10 }, (_, i) => i + 1).map((n) =>
+      '<button type="button" data-n="' + n + '" aria-pressed="' + chosen.has(n) + '" aria-label="' + n + ' players">' + n + "</button>").join("");
+  }
+  $("counts").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-n]");
+    if (!b) return;
+    const n = +b.getAttribute("data-n");
+    if (chosen.has(n)) { if (chosen.size > 1) chosen.delete(n); } else chosen.add(n);
+    renderCounts();
+  });
+  renderCounts();
+  $("ideas").innerHTML = IDEAS.map((t) => '<button class="chip" type="button">' + esc(t) + "</button>").join("");
+  $("ideas").addEventListener("click", (e) => {
+    const c = e.target.closest(".chip");
+    if (!c) return;
+    $("newPrompt").value = c.textContent;
+    const range = c.textContent.match(/(\d+)\s*to\s*(\d+)\s*players/);
+    chosen = new Set();
+    if (range) for (let n = +range[1]; n <= +range[2]; n++) chosen.add(n);
+    else if (/Memory/.test(c.textContent)) { chosen.add(1); chosen.add(2); }
+    else chosen.add(2);
+    renderCounts();
+    $("newPrompt").focus();
+  });
+  $("exCards").innerHTML = EXAMPLES.map((g) =>
+    '<button class="card excard" type="button" data-open="' + g.id + '"><strong>' + esc(g.title) + "</strong><span>" + esc(g.description) + "</span><span>" + playersLabel(g) + (g.hiddenInformation ? " · hidden hands" : "") + "</span></button>"
+  ).join("");
+
+  $("newForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const request = $("newPrompt").value.trim();
+    if (!request) { toast("Describe the game you want first."); $("newPrompt").focus(); return; }
+    const allowed = Array.from(chosen).sort((a, b) => a - b);
+    try {
+      const out = await build({ kind: "new", request, allowed, box: $("newProgress") });
+      const v = 1;
+      const rec = {
+        id: newId(),
+        title: out.parsed.title || out.meta.title || "New game",
+        description: out.parsed.description,
+        rules: out.parsed.rules,
+        tutorial: out.parsed.tutorial,
+        allowedPlayers: out.meta.allowedPlayers, hiddenInformation: out.meta.hiddenInformation,
+        code: out.parsed.code,
+        chat: [{ role: "user", text: request }, { role: "ai", text: (out.parsed.notes || "Built the game.") + (out.fixed ? " (I found and fixed a bug while testing it.)" : ""), v }],
+        versions: [{ n: v, note: "First version", code: out.parsed.code, at: Date.now() }],
+        createdAt: Date.now(),
+      };
+      saveGame(rec);
+      await sleep(400);
+      $("newProgress").hidden = true;
+      $("newPrompt").value = "";
+      openGame(rec);
+    } catch (err) { /* shown in the progress card */ }
+  });
+
+  /* ---------- Change and fix ---------- */
+  async function changeGame({ kind, request, error }) {
+    const base = current;
+    if (!base) return;
+    $("bug").hidden = true;
+    try {
+      const out = await build({ kind, request, error, base, box: $("chatProgress") });
+      const prevN = (base.versions || []).slice(-1)[0]?.n || 1;
+      const n = base.example ? 2 : prevN + 1;
+      const startVersions = base.example ? [{ n: 1, note: "The example", code: base.code, at: Date.now() }] : (base.versions || []);
+      const userText = kind === "fix" ? "Fix the bug: " + error : request;
+      const rec = {
+        ...base,
+        id: base.example ? newId() : base.id,
+        example: false,
+        title: out.parsed.title || base.title,
+        description: out.parsed.description || base.description,
+        rules: out.parsed.rules || base.rules,
+        tutorial: out.parsed.tutorial.length ? out.parsed.tutorial : (base.tutorial || []),
+        translations: null,
+        allowedPlayers: out.meta.allowedPlayers, hiddenInformation: out.meta.hiddenInformation,
+        code: out.parsed.code,
+        chat: (base.chat || []).concat({ role: "user", text: userText }, { role: "ai", text: (out.parsed.notes || "Updated the game.") + (out.fixed ? " (I also fixed a bug found while testing.)" : ""), v: n }),
+        versions: startVersions.concat({ n, note: (kind === "fix" ? "Bug fix" : request).slice(0, 80), code: out.parsed.code, at: Date.now() }),
+        createdAt: base.example ? Date.now() : base.createdAt,
+      };
+      saveGame(rec);
+      if (base.example) toast("Saved your version under My games.");
+      await sleep(500);
+      $("chatProgress").hidden = true;
+      $("chatInput").value = "";
+      openGame(rec);
+    } catch (err) { /* shown in the progress card */ }
+  }
+  $("chatForm").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const request = $("chatInput").value.trim();
+    if (!request) { toast("Describe the change first."); return; }
+    changeGame({ kind: "change", request });
+  });
+  $("fixBtn").onclick = () => changeGame({ kind: "fix", error: $("bugMsg").textContent });
+
+  function showBug(text) {
+    $("bugMsg").textContent = text;
+    $("bug").hidden = false;
+    $("fixBtn").hidden = !caps.sample;
+    $("status").innerHTML = "";
+  }
+
+  /* ---------- Playing ---------- */
+  /* The game runs as a standalone package inside a sandboxed iframe (no same-origin access).
+     The page and the game talk only through the course's JSON messages:
+     page → game: {message_kind:"state_change", state, turn_of_user, my_user, players}
+     game → page: {message_kind:"make_move", turn_of_player_index, next_state}
+     If the iframe can't start in this view, the page falls back to drawing the game itself. */
+  const PACKAGE_RUNTIME = String.raw`
+;(function () {
+  var G = (typeof game !== "undefined") ? game : null;
+  var root = document.getElementById("root"), note = document.getElementById("gbmsg"), css = document.getElementById("gcss");
+  var S = null, turn = null, me = null, ui = {}, waiting = false;
+  function clone(x) { return x === undefined ? undefined : JSON.parse(JSON.stringify(x)); }
+  function send(m) { parent.postMessage(m, "*"); }
+  function fail(e) { send({ message_kind: "game_error", error: String((e && e.message) || e) }); }
+  function size() { send({ message_kind: "resize", height: Math.ceil(document.documentElement.scrollHeight) }); }
+  function draw() {
+    var viewer = turn === null ? -1 : (me === null ? -1 : me);
+    var out = G.render(clone(S), viewer, ui);
+    if (typeof out === "string") out = { html: out, css: "" };
+    css.textContent = (out && out.css) || "";
+    root.innerHTML = (out && out.html) || "";
+    root.className = (turn !== null && me !== null && turn === me && !waiting) ? "" : "locked";
+    size();
+  }
+  window.addEventListener("message", function (e) {
+    if (e.source !== parent) return;
+    var d = e.data || {};
+    if (d.message_kind !== "state_change") return;
+    S = d.state;
+    turn = d.turn_of_user ? d.turn_of_user.player_index : null;
+    me = d.my_user ? d.my_user.player_index : null;
+    ui = {}; waiting = false; note.hidden = true;
+    try { draw(); } catch (err) { fail(err); }
+  });
+  root.addEventListener("click", function (e) {
+    var el = e.target.closest("[data-move],[data-ui]");
+    if (!el || el.disabled || waiting) return;
+    if (turn === null || me === null || turn !== me) return;
+    var move;
+    try {
+      if (el.hasAttribute("data-ui")) {
+        var p = JSON.parse(el.getAttribute("data-ui")) || {};
+        for (var k in p) { if (p[k] === null) delete ui[k]; else ui[k] = p[k]; }
+        draw();
+        return;
+      }
+      move = JSON.parse(el.getAttribute("data-move"));
+    } catch (err) { fail(err); return; }
+    var next;
+    try { next = G.applyMove(clone(S), clone(move), Math.random); }
+    catch (err) { note.textContent = "Not allowed: " + ((err && err.message) || err); note.hidden = false; size(); return; }
+    var res = G.result(clone(next));
+    var nt = res ? null : G.currentPlayer(clone(next));
+    waiting = true; root.className = "locked";
+    send({ message_kind: "make_move", turn_of_player_index: (nt === undefined ? null : nt), next_state: clone(next), move: clone(move) });
+  });
+  window.addEventListener("error", function (e) { fail(e.message || "Script error"); });
+  if (typeof ResizeObserver !== "undefined") new ResizeObserver(size).observe(document.body);
+  if (!G) { fail("The code must define: const game = { ... }"); return; }
+  send({ message_kind: "game_ready" });
+})();
+`;
+
+  function themeVars() {
+    const cs = getComputedStyle(document.documentElement);
+    const v = (n) => cs.getPropertyValue(n).trim();
+    const map = { "--g-bg": "--surface-2", "--g-surface": "--surface", "--g-fg": "--ink", "--g-muted": "--muted", "--g-line": "--line", "--g-accent": "--accent", "--g-accent-ink": "--accent-ink", "--g-board": "--board" };
+    const out = {};
+    for (const [k, src] of Object.entries(map)) out[k] = v(src);
+    for (let i = 0; i < 10; i++) out["--g-p" + i] = v("--p" + i);
+    return out;
+  }
+  function packageHtml(code) {
+    const vars = Object.entries(themeVars()).map(([k, val]) => k + ":" + val).join(";");
+    const dark = matchMedia("(prefers-color-scheme: dark)").matches && document.documentElement.getAttribute("data-theme") !== "light" || document.documentElement.getAttribute("data-theme") === "dark";
+    const safe = code.replace(/<\/script/gi, "<\\/script");
+    return '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">' +
+      "<style>:root{" + vars + ";color-scheme:" + (dark ? "dark" : "light") + "}" +
+      "html,body{margin:0;background:transparent;color:var(--g-fg);font:15px/1.4 system-ui,-apple-system,'Segoe UI',sans-serif}" +
+      "*{box-sizing:border-box}button{font:inherit;color:inherit;cursor:pointer}button[disabled]{cursor:default}" +
+      "#root{padding:4px 2px;min-width:0;overflow-x:auto}#root.locked [data-move],#root.locked [data-ui]{pointer-events:none}" +
+      ".gb-msg{margin:10px 0 0;padding:8px 12px;border-radius:8px;background:var(--g-surface);border:1px solid var(--g-line);font-size:14px}[hidden]{display:none!important}</style>" +
+      '<style id="gcss"></style></head><body><div id="root"></div><p class="gb-msg" id="gbmsg" hidden></p><script>' + safe + "\n" + PACKAGE_RUNTIME + "</scr" + "ipt></body></html>";
+  }
+
+  let frame = null;
+  let surface = "iframe";
+  let frameReadyResolve = null;
+  window.addEventListener("message", (e) => {
+    if (!frame || e.source !== frame.contentWindow) return;
+    const d = e.data || {};
+    if (d.message_kind === "game_ready") { if (frameReadyResolve) frameReadyResolve(true); return; }
+    if (d.message_kind === "resize") { frame.style.height = Math.max(120, Math.min(1800, Number(d.height) || 0)) + "px"; return; }
+    if (d.message_kind === "game_error") { showBug("The game package failed: " + d.error); return; }
+    if (d.message_kind === "make_move") onProposal(d);
+  });
+
+  async function mountGame(code) {
+    $("frameHost").innerHTML = "";
+    frame = null;
+    if (window.__gbInline) { surface = "inline"; $("stage").hidden = false; return; }
+    const f = document.createElement("iframe");
+    f.setAttribute("sandbox", "allow-scripts");
+    f.setAttribute("title", "Game");
+    f.setAttribute("referrerpolicy", "no-referrer");
+    frame = f;
+    const ready = new Promise((res) => { frameReadyResolve = res; setTimeout(() => res(false), 3000); });
+    f.srcdoc = packageHtml(code);
+    $("frameHost").appendChild(f);
+    const ok = await ready;
+    frameReadyResolve = null;
+    if (ok) { surface = "iframe"; $("stage").hidden = true; return; }
+    $("frameHost").innerHTML = "";
+    frame = null;
+    surface = "inline";
+    $("stage").hidden = false;
+  }
+
+  /* Inline fallback: same messages, drawn by the page from the sandboxed worker. */
+  const shadow = $("stage").attachShadow({ mode: "open" });
+  const STAGE_BASE = ":host{display:block;color:var(--g-fg);font:15px/1.4 var(--font-body)}" +
+    "*{box-sizing:border-box}button{font:inherit;color:inherit;cursor:pointer}button[disabled]{cursor:default}" +
+    ".g-root{min-width:0;overflow-x:auto}.g-root.locked [data-move],.g-root.locked [data-ui]{pointer-events:none}";
+  let inlineMsg = null, inlineUi = {};
+  async function inlinePaint() {
+    const m = match, d = inlineMsg;
+    if (!m || !d) return;
+    const turn = d.turn_of_user ? d.turn_of_user.player_index : null;
+    const me = d.my_user ? d.my_user.player_index : null;
+    const viewer = turn === null || me === null ? -1 : me;
+    const locked = !(turn !== null && me !== null && turn === me);
+    try {
+      const v = await runner.call("view", { state: d.state, viewer, ui: inlineUi });
+      if (m.stopped || match !== m) return;
+      shadow.innerHTML = "<style>" + STAGE_BASE + "\n" + sanitizeCss(v.css) + '</style><div class="g-root' + (locked ? " locked" : "") + '">' + sanitizeHtml(v.html) + "</div>";
+    } catch (e) { showBug("Drawing the game failed: " + e.message); }
+  }
+  shadow.addEventListener("click", async (e) => {
+    const d = inlineMsg;
+    if (!d || !match) return;
+    const el = e.target.closest("[data-move],[data-ui]");
+    if (!el || el.disabled) return;
+    const turn = d.turn_of_user ? d.turn_of_user.player_index : null;
+    const me = d.my_user ? d.my_user.player_index : null;
+    if (turn === null || me === null || turn !== me) return;
+    if (el.hasAttribute("data-ui")) {
+      let patch;
+      try { patch = JSON.parse(el.getAttribute("data-ui")); } catch (err) { toast("That button is broken (bad data-ui)."); return; }
+      for (const [k, v] of Object.entries(patch || {})) { if (v === null) delete inlineUi[k]; else inlineUi[k] = v; }
+      inlinePaint();
+      return;
+    }
+    let move;
+    try { move = JSON.parse(el.getAttribute("data-move")); } catch (err) { toast("That button is broken (bad data-move)."); return; }
+    try {
+      const info = await runner.call("apply", { state: d.state, move });
+      onProposal({ message_kind: "make_move", turn_of_player_index: info.current, next_state: info.state, move });
+    } catch (err) {
+      if (err.fromGame) toast("Not allowed: " + err.message); else showBug(err.message);
+    }
+  });
+
+  function sendStateChange(msg) {
+    log(msg);
+    if (surface === "iframe" && frame && frame.contentWindow) frame.contentWindow.postMessage(msg, "*");
+    else { inlineMsg = msg; inlineUi = {}; inlinePaint(); }
+  }
+
+  let mode = "computer";
+  function setMode(m) {
+    mode = m;
+    $("modePass").setAttribute("aria-pressed", String(m === "pass"));
+    $("modeCpu").setAttribute("aria-pressed", String(m === "computer"));
+    $("passOpts").hidden = m !== "pass";
+  }
+  function fillViewAs(n) {
+    const sel = $("viewAs");
+    sel.innerHTML = '<option value="auto">Whoever\'s turn it is</option>' + Array.from({ length: n }, (_, i) => '<option value="' + i + '">' + playerName(i) + "</option>").join("");
+  }
+  $("modePass").onclick = () => { setMode("pass"); startMatch(); };
+  $("modeCpu").onclick = () => { setMode("computer"); startMatch(); };
+  $("pCount").onchange = () => { fillViewAs(+$("pCount").value); startMatch(); };
+  $("hideBetween").onchange = () => { if (match) step(); };
+  $("viewAs").onchange = () => { if (match) { match.viewer = null; step(); } };
+  $("restartBtn").onclick = () => startMatch();
+  $("againBtn").onclick = () => startMatch();
+
+  function stopMatch() {
+    if (match) match.stopped = true;
+    match = null;
+    inlineMsg = null;
+    $("handoff").hidden = true;
+    $("resultBar").hidden = true;
+  }
+
+  function brief(v) {
+    if (v && typeof v === "object") { const t = JSON.stringify(v); return t.length > 90 ? t.slice(0, 87) + "…" : t; }
+    return v;
+  }
+  function log(obj) {
+    if (!match) return;
+    match.log.push(obj);
+    if (match.log.length > 40) match.log.shift();
+    $("apiLog").innerHTML = match.log.slice().reverse().map((m) =>
+      '<div><span class="k">' + esc(m.message_kind) + "</span> " +
+      esc(JSON.stringify(m, (k, v) => (k === "message_kind" ? undefined : (k === "state" || k === "next_state") ? brief(v) : v))) + "</div>"
+    ).join("");
+  }
+
+  async function startMatch() {
+    if (!runner || !current || !meta) return;
+    stopMatch();
+    const n = +$("pCount").value || meta.allowedPlayers[0];
+    const players = Array.from({ length: n }, (_, i) => ({ player_index: i, kind: mode === "computer" && i > 0 ? "computer" : "human" }));
+    const m = { players, n, state: null, current: null, result: null, viewer: null, log: [], busy: false, stopped: false };
+    match = m;
+    $("apiLog").innerHTML = "";
+    log({ message_kind: "note", text: surface === "iframe" ? "Game package running in a sandboxed iframe" : "Iframe unavailable in this view; the page is drawing the game (fallback)" });
+    try {
+      const info = await runner.call("init", { numPlayers: n });
+      if (m.stopped) return;
+      Object.assign(m, info);
+      await step();
+    } catch (e) { if (!m.stopped) showBug(e.message); }
+  }
+
+  function setStatus(html) { $("status").innerHTML = html; }
+  const dot = (i) => '<span class="dot" style="background:' + pColor(i) + '"></span>';
+
+  async function step() {
+    const m = match;
+    if (!m || m.stopped || !m.state) return; // the match is still starting
+    $("handoff").hidden = true;
+    $("resultBar").hidden = true;
+    if (m.result) {
+      const w = m.result.winners;
+      const text = w.length === 0 ? "It's a draw" : w.length === 1 ? (m.players[w[0]] && m.players[w[0]].kind === "computer" ? "The computer wins" : playerName(w[0]) + " wins!") : "Tie: " + w.map(playerName).join(" and ");
+      $("resultText").textContent = text;
+      $("resultSub").textContent = m.result.summary;
+      $("resultBar").hidden = false;
+      setStatus(w.length === 1 ? dot(w[0]) + "Game over" : "Game over");
+      sendStateChange({ message_kind: "state_change", state: m.state, turn_of_user: null, my_user: null, players: m.players });
+      return;
+    }
+    const cur = m.current;
+    const who = m.players[cur];
+    if (!who) { showBug("currentPlayer returned " + JSON.stringify(cur) + " for a " + m.n + "-player game."); return; }
+    if (who.kind === "computer") {
+      setStatus(dot(cur) + playerName(cur) + " (computer) is thinking…");
+      sendStateChange({ message_kind: "state_change", state: m.state, turn_of_user: { player_index: cur, kind: "computer" }, my_user: { player_index: 0, kind: "human" }, players: m.players });
+      await sleep(650);
+      if (m.stopped) return;
+      try {
+        const move = await runner.call("computer", { state: m.state });
+        if (m.stopped) return;
+        const info = await runner.call("apply", { state: m.state, move });
+        if (m.stopped) return;
+        log({ message_kind: "make_move", turn_of_player_index: info.current, next_state: info.state, move, from: "computer player " + cur });
+        Object.assign(m, info);
+        await step();
+      } catch (e) { if (!m.stopped) showBug("The computer player broke the game: " + e.message); }
+      return;
+    }
+    const fixed = mode === "pass" && $("viewAs").value !== "auto";
+    const viewer = mode === "computer" ? 0 : fixed ? +$("viewAs").value : cur;
+    if (mode === "pass" && !fixed && $("hideBetween").checked && m.n > 1 && m.viewer !== cur) {
+      setStatus(dot(cur) + playerName(cur) + "'s turn");
+      $("handoffTitle").textContent = "Pass the device to " + playerName(cur);
+      $("handoffBtn").textContent = "I'm " + playerName(cur) + ", show my view";
+      $("handoff").hidden = false;
+      $("handoffBtn").onclick = () => { m.viewer = cur; step(); };
+      return;
+    }
+    m.viewer = viewer;
+    if (mode === "computer") setStatus(dot(cur) + 'Your turn <span class="sub">You are ' + playerName(0) + "</span>");
+    else if (viewer === cur) setStatus(dot(cur) + playerName(cur) + "'s turn");
+    else setStatus(dot(cur) + playerName(cur) + "'s turn " + '<span class="sub">Viewing as ' + playerName(viewer) + ", so moves are off</span>");
+    sendStateChange({ message_kind: "state_change", state: m.state, turn_of_user: { player_index: cur, kind: "human" }, my_user: { player_index: viewer, kind: "human" }, players: m.players });
+  }
+
+  /* make_move from the game: the page checks it like a backend would, then moves on. */
+  async function onProposal(d) {
+    const m = match;
+    if (!m || m.stopped || m.busy || m.result) return;
+    const who = m.players[m.current];
+    if (!who || who.kind !== "human" || m.viewer !== m.current) return;
+    m.busy = true;
+    log(d);
+    try {
+      await runner.call("apply", { state: m.state, move: d.move });
+      const info = await runner.call("info", { state: d.next_state });
+      if (m.stopped) return;
+      if ((info.current ?? null) !== (d.turn_of_player_index ?? null)) log({ message_kind: "note", text: "turn_of_player_index from the game didn't match the rules; using " + info.current });
+      Object.assign(m, info);
+      m.busy = false;
+      await step();
+    } catch (err) {
+      m.busy = false;
+      if (err.fromGame) { toast("Not allowed: " + err.message); step(); }
+      else showBug(err.message);
+    }
+  }
+
+  /* ---------- Capabilities ---------- */
+  function applyAiAvailability() {
+    $("noAi").hidden = !!caps.sample;
+    $("chatForm").hidden = !caps.sample;
+    $("chatHint").hidden = !caps.sample;
+    setBusy(!!building);
+  }
+
+  async function connect() {
+    const use = window.claude && typeof window.claude.use === "function" ? (n) => window.claude.use(n).catch(() => null) : async () => null;
+    const [sample, db, user] = await Promise.all([use("sample"), use("db"), use("user")]);
+    caps.sample = sample; caps.db = db; caps.user = user;
+    applyAiAvailability();
+    let name = "";
+    if (user) {
+      try { uid = await user.id(); } catch (e) { uid = null; }
+      try { name = (await user.name()) || ""; } catch (e) { name = ""; }
+    }
+    $("whoName").textContent = name ? name : uid ? "Signed in" : "Guest";
+    $("avatar").textContent = name ? name.trim().split(/\s+/).map((w) => w[0]).slice(0, 2).join("").toUpperCase() : "?";
+    if (db && uid) {
+      canSave = true;
+      db.collection("data/users/" + uid).onSnapshot(
+        (snap) => {
+          const fromDb = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+          const ids = new Set(fromDb.map((g) => g.id));
+          myGames = fromDb.concat(myGames.filter((g) => !ids.has(g.id) && !g.example));
+          renderSidebar();
+        },
+        () => { canSave = false; showSaveNote("Saving is off in this view, so games last until you close the page."); }
+      );
+    } else {
+      showSaveNote(uid ? "Saving is off in this view, so games last until you close the page." : "Sign in to keep your games.");
+    }
+  }
+
+  renderSidebar();
+  applyAiAvailability();
+  connect();
+})();
+</script>
