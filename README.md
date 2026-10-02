@@ -12,10 +12,8 @@ GameBuilder is the creator side of the group platform in **Multiplayer Games** (
 |---|---|
 | **Describe** the rules | Type a description and choose the allowed player totals (for example 2, 3 or 6, a set rather than a range). |
 | **Generate** artifacts | The AI writes the game logic, the board UI, a computer opponent, the rules, a description and a tutorial. |
-| **Test** in the emulator | Every new version is played automatically before you see it. If a playtest finds a bug, the error goes back to the AI for one fix. Then play it yourself in pass-and-play (with "pass the device" screens) or against the computer. **View as** shows any seat's perspective, with input disabled when it isn't that seat's turn. |
+| **Test** in the emulator | Every new version is played automatically before you see it. If a playtest finds a bug, the error goes back to the AI for one fix. Then play it yourself in pass-and-play (with "pass the device" screens) or against the computer. |
 | **Refine** | Chat to change rules, board size, players or looks. Each change is a new version, and any earlier version can be restored. |
-| **Publish** | Freeze a version ("Published v2"). Editing continues as a draft ("Draft v3 · published v2"). |
-| **Languages** | Generate Spanish and Hebrew rules and tutorials for review. Hebrew displays right-to-left. |
 | **My games** | Create, open and delete your games. They are saved privately per user. |
 
 Tic-Tac-Toe, the course's shared test game, is built in as an example. Its moves use the same format as the backend's reference engine: `{"type": "place", "cell": 0-8}`.
@@ -51,17 +49,16 @@ Tic-Tac-Toe, the course's shared test game, is built in as an example. Its moves
 - **Rules check.** The page re-checks every proposed move against the game's rules in a Web Worker before accepting it, the way a backend would. The worker also runs the computer opponent and the automatic playtests, with a time limit so a stuck game can't freeze the page.
 - **Fallback.** If a view can't start the iframe, the page draws the game itself from sanitized HTML (scripts, event handlers and external resources removed). The message log says which mode is running.
 - **Game format.** The AI writes every game to one small contract (`init`, `currentPlayer`, `legalMoves`, `applyMove`, `result`, `computerMove`, `render`). See [docs/game-contract.md](docs/game-contract.md).
-- **Backend package.** Each game shows the JSON bodies for the backend's `POST /games` and `POST /games/{id}/versions`, including `manifest.players.allowedCounts`. The game code is in `rulesArtifact`, using the published version when there is one.
 
 ## Screenshots
 
-| Pass-and-play | View as another player |
+| Play against the computer | Pass-and-play |
 |---|---|
-| ![Pass and play](docs/screenshots/pass-and-play.png) | ![View as](docs/screenshots/view-as.png) |
+| ![Play vs computer](docs/screenshots/play-vs-computer.png) | ![Pass and play](docs/screenshots/pass-and-play.png) |
 
-| Versions, publish and languages | Phone, dark mode |
+| Refined by chat (version 2) | Phone, dark mode |
 |---|---|
-| ![Publish and languages](docs/screenshots/publish-and-languages.png) | ![Phone](docs/screenshots/phone-dark.png) |
+| ![Changed by chat](docs/screenshots/refine-by-chat.png) | ![Phone](docs/screenshots/phone-dark.png) |
 
 ## Project layout
 
@@ -75,7 +72,7 @@ scripts/
 tests/
   harness.test.js            game contract, playtests, illegal moves, computer opponent
   browser_fallback_test.py   end to end in Chromium (build, auto-fix, play, save, sanitizing)
-  browser_iframe_test.py     end to end in iframe mode (messages, View as, publish, languages)
+  browser_iframe_test.py     end to end in iframe mode (sandbox, messages, build and change)
   fake-replies.js            canned AI replies, including one with a deliberate bug
 docs/
   game-contract.md
@@ -100,12 +97,12 @@ The browser tests replace the AI and storage with local stand-ins, so they run o
 
 ## Status and next steps
 
-Done: describe → generate → playtest → play → refine → publish, the iframe message contract, View as, tutorial, translations, and the backend package.
+Done: describe → generate → playtest → play (pass-and-play and vs computer) → refine, with the iframe message contract and Tic-Tac-Toe as the shared test game.
 
 Next:
 1. **Google login.** The course spec asks for Google sign-in. Right now identity comes from the Claude account. The plan is Firebase Authentication on self-hosted pages, the same stack the portals use.
-2. **Publish to the backend.** Send the package to the shared backend once it is deployed, instead of copying the JSON by hand.
-3. **Separate-origin hosting for game packages.** Serve packages from their own domain so the portals can load the same files.
+2. **Publish versions to the backend,** using the backend team's `POST /games` and `POST /games/{id}/versions`.
+3. **Emulator "View as"** for testing every seat's perspective, **publishing** frozen versions, and **translations** of rules and tutorials. Early prototypes of these are on the `extras` branch.
 
 ## Credits
 

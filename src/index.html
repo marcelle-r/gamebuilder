@@ -170,10 +170,6 @@ summary { cursor: pointer; font-size: 14px; font-weight: 500; color: var(--muted
 .code { margin: 10px 0 0; max-height: 320px; overflow: auto; background: var(--code-bg); border-radius: 10px; padding: 10px; font: 12px/1.5 var(--font-mono); white-space: pre; }
 #frameHost iframe { display: block; width: 100%; height: 320px; border: 0; background: transparent; }
 .tutorial { margin: 10px 0 0; padding-left: 20px; font-size: 14px; display: grid; gap: 4px; }
-.langbody { margin-top: 10px; font-size: 14px; display: grid; gap: 6px; }
-.langbody h4 { margin: 0; font-size: 15px; }
-.langbody p, .langbody ol { margin: 0; }
-.langbody ol { padding-inline-start: 20px; }
 .toast { position: fixed; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--ink); color: var(--surface); padding: 10px 16px; border-radius: 10px; font-size: 14px; max-width: min(90vw, 460px); box-shadow: 0 8px 24px rgba(0,0,0,.2); }
 
 @media (max-width: 900px) {
@@ -265,7 +261,6 @@ summary { cursor: pointer; font-size: 14px; font-weight: 500; color: var(--muted
           </div>
           <div class="row" id="passOpts">
             <label class="check"><input type="checkbox" id="hideBetween"> Hide the screen between turns</label>
-            <span class="field">View as <select id="viewAs" aria-label="View the game as"></select></span>
           </div>
           <div class="bug" id="bug" hidden>
             <p><strong>This version of the game has a bug.</strong></p>
@@ -311,30 +306,12 @@ summary { cursor: pointer; font-size: 14px; font-weight: 500; color: var(--muted
             <ol class="tutorial" id="gTutorial"></ol>
           </details>
           <details>
-            <summary>Languages</summary>
-            <div class="row" style="margin-top:10px">
-              <div class="seg" role="group" aria-label="Language" id="langTabs">
-                <button type="button" data-lang="en" aria-pressed="true">English</button>
-                <button type="button" data-lang="es" aria-pressed="false">Español</button>
-                <button type="button" data-lang="he" aria-pressed="false">עברית</button>
-              </div>
-              <button class="btn small" type="button" id="translateBtn">Generate translations</button>
-            </div>
-            <div class="langbody" id="langBody"></div>
-          </details>
-          <details>
             <summary>Versions</summary>
             <ol class="versions" id="versions"></ol>
           </details>
           <details>
             <summary>Code</summary>
             <pre class="code" id="gCode"></pre>
-          </details>
-          <details>
-            <summary>Package for the backend</summary>
-            <p class="hint" style="margin-top:10px">The JSON bodies for the backend's <code>POST /games</code> and <code>POST /games/{id}/versions</code>. The game code goes in <code>rulesArtifact</code>. <span id="pkgHint"></span></p>
-            <div class="row" style="margin-top:8px"><button class="btn small" type="button" id="copyPkg">Copy JSON</button></div>
-            <pre class="code" id="pkg"></pre>
           </details>
         </aside>
       </div>
@@ -359,11 +336,6 @@ summary { cursor: pointer; font-size: 14px; font-weight: 500; color: var(--muted
   const IDEAS = [
     "Tic-Tac-Toe on a 3×3 board",
     "Tic-Tac-Toe on a 4×4 board, 4 in a row wins",
-    "Nim: 3 piles of 3, 5 and 7 stones, whoever takes the last stone loses",
-    "Dots and Boxes on a 3×3 grid",
-    "Crazy Eights for 2 to 4 players",
-    "Reversi on a 6×6 board",
-    "Memory: find matching pairs of 16 face-down cards",
   ];
 
   const caps = { sample: null, db: null, user: null };
@@ -685,7 +657,7 @@ ${FORMAT}`;
   function toDoc(rec) {
     return {
       title: rec.title, description: rec.description, rules: rec.rules,
-      tutorial: rec.tutorial || [], translations: rec.translations || null, published: rec.published || null,
+      tutorial: rec.tutorial || [],
       allowedPlayers: allowedOf(rec), hiddenInformation: !!rec.hiddenInformation,
       code: rec.code,
       chat: (rec.chat || []).slice(-24),
@@ -772,10 +744,7 @@ ${FORMAT}`;
     renderActions(rec);
     $("gRules").textContent = rec.rules || "No rules written yet.";
     $("gTutorial").innerHTML = (rec.tutorial || []).length ? rec.tutorial.map((t) => "<li>" + esc(t) + "</li>").join("") : "<li>No tutorial yet. Ask for one in the chat.</li>";
-    setLang("en");
     $("gCode").textContent = rec.code;
-    $("pkg").textContent = JSON.stringify(backendPackage(rec), null, 2);
-    $("pkgHint").textContent = rec.example ? "" : rec.published ? "Uses published version " + rec.published.n + "." : "Not published yet, so this uses the current draft.";
     $("chatHint").textContent = rec.example
       ? "Ask for any change. Your changed version is saved under My games."
       : "Ask for any change: rules, board size, number of players, looks, or a smarter computer.";
@@ -786,7 +755,6 @@ ${FORMAT}`;
     const allowed = allowedOf(rec);
     $("pCount").innerHTML = allowed.map((n) => '<option value="' + n + '">' + n + "</option>").join("");
     $("hideBetween").checked = !!rec.hiddenInformation;
-    fillViewAs(allowed[0]);
     setMode(rec.hiddenInformation && allowed[allowed.length - 1] > 1 ? "pass" : "computer");
     renderSidebar();
     if (runner) runner.stop();
@@ -803,32 +771,8 @@ ${FORMAT}`;
     }
   }
 
-  function backendPackage(rec) {
-    const slug = (rec.title || "game").toLowerCase().normalize("NFKD").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 60) || "game";
-    const n = rec.example ? 1 : rec.published ? rec.published.n : ((rec.versions || []).slice(-1)[0]?.n || 1);
-    const code = rec.published && !rec.example ? rec.published.code : rec.code;
-    const capabilities = { bots: true, midMatchJoin: false, spectators: true, passAndPlay: true, offline: true };
-    return {
-      "POST /games": { slug, name: rec.title || "Untitled game", description: rec.description || "" },
-      "POST /games/{id}/versions": {
-        engineKey: "gb-" + slug,
-        engineVersion: n,
-        manifest: {
-          gameKey: "gb-" + slug, version: n, name: rec.title, description: rec.description || "", rules: rec.rules || "",
-          players: { allowedCounts: allowedOf(rec) }, hiddenInformation: !!rec.hiddenInformation, capabilities, contract: "gamebuilder/1",
-        },
-        capabilities,
-        rulesArtifact: code,
-      },
-    };
-  }
   function curN(rec) { return (rec.versions || []).slice(-1)[0]?.n || 1; }
-  function statusLabel(rec) {
-    if (rec.example) return "Example";
-    const n = curN(rec);
-    if (rec.published && rec.published.n === n) return "Published v" + n;
-    return "Draft v" + n + (rec.published ? " · published v" + rec.published.n : "");
-  }
+  function statusLabel(rec) { return rec.example ? "Example" : "Version " + curN(rec); }
   function renderHeadTags(rec) {
     $("gTags").innerHTML =
       '<span class="tag accent">' + playersLabel(rec) + "</span>" +
@@ -837,71 +781,9 @@ ${FORMAT}`;
   }
   function renderActions(rec) {
     if (rec.example) { $("gActions").innerHTML = ""; return; }
-    const n = curN(rec);
-    const isPub = rec.published && rec.published.n === n;
-    $("gActions").innerHTML = (isPub ? "" : '<button class="btn small primary" type="button" id="pubBtn">Publish version ' + n + "</button>") +
-      '<button class="btn small danger" type="button" id="delBtn">Delete</button>';
+    $("gActions").innerHTML = '<button class="btn small danger" type="button" id="delBtn">Delete</button>';
     $("delBtn").onclick = () => confirmDelete();
-    if (!isPub) $("pubBtn").onclick = () => {
-      const rec2 = { ...current, published: { n, at: Date.now(), code: current.code } };
-      current = rec2;
-      saveGame(rec2);
-      renderHeadTags(rec2);
-      renderActions(rec2);
-      renderVersions();
-      $("pkg").textContent = JSON.stringify(backendPackage(rec2), null, 2);
-      $("pkgHint").textContent = "Uses published version " + n + ".";
-      toast("Published version " + n + ". It won't change when you edit the draft.");
-    };
   }
-
-  /* Languages */
-  let lang = "en";
-  function setLang(l) {
-    lang = l;
-    for (const b of $("langTabs").querySelectorAll("button")) b.setAttribute("aria-pressed", String(b.dataset.lang === l));
-    const rec = current;
-    if (!rec) return;
-    const t = l === "en" ? { title: rec.title, description: rec.description, rules: rec.rules, tutorial: rec.tutorial || [] } : rec.translations && rec.translations[l];
-    const body = $("langBody");
-    body.dir = l === "he" ? "rtl" : "ltr";
-    if (!t) { body.innerHTML = "<p>Not translated yet. Generate translations to review the Spanish and Hebrew rules and tutorial.</p>"; return; }
-    body.innerHTML = "<h4>" + esc(t.title || "") + "</h4><p>" + esc(t.description || "") + "</p><p>" + esc(t.rules || "") + "</p>" +
-      ((t.tutorial || []).length ? "<ol>" + t.tutorial.map((x) => "<li>" + esc(x) + "</li>").join("") + "</ol>" : "");
-  }
-  $("langTabs").addEventListener("click", (e) => { const b = e.target.closest("[data-lang]"); if (b) setLang(b.dataset.lang); });
-  $("translateBtn").onclick = async () => {
-    if (!caps.sample || !current) { toast("Translations need Claude, which isn't available in this view."); return; }
-    const rec = current;
-    const btn = $("translateBtn");
-    btn.disabled = true; btn.textContent = "Translating…";
-    const src = { title: rec.title, description: rec.description, rules: rec.rules, tutorial: rec.tutorial || [] };
-    try {
-      const out = await caps.sample.json(
-        "Translate this game's player-facing text into Spanish (es) and Hebrew (he). Keep game terms consistent and natural for players. " +
-        'Reply with only JSON: {"es":{"title":"","description":"","rules":"","tutorial":[""]},"he":{"title":"","description":"","rules":"","tutorial":[""]}}\n\n' + JSON.stringify(src),
-        { cache: false }
-      );
-      const ok = (x) => x && typeof x.title === "string" && typeof x.rules === "string";
-      if (!ok(out && out.es) || !ok(out && out.he)) throw new Error("bad");
-      const clean = (x) => ({ title: String(x.title), description: String(x.description || ""), rules: String(x.rules), tutorial: Array.isArray(x.tutorial) ? x.tutorial.map(String) : [] });
-      const rec2 = { ...rec, translations: { es: clean(out.es), he: clean(out.he) } };
-      if (current === rec) current = rec2;
-      if (!rec.example) saveGame(rec2); else EXAMPLES[EXAMPLES.findIndex((g) => g.id === rec.id)] = rec2;
-      setLang(lang === "en" ? "es" : lang);
-      toast("Translated into Spanish and Hebrew. Review them before publishing.");
-    } catch (e) {
-      toast(e && e.code && SAMPLE_COPY[e.code] ? SAMPLE_COPY[e.code] : "Couldn't translate right now. Try again.");
-    } finally {
-      btn.disabled = false; btn.textContent = "Generate translations";
-    }
-  };
-
-  $("copyPkg").onclick = () => {
-    const text = $("pkg").textContent;
-    const fallback = () => { const r = document.createRange(); r.selectNodeContents($("pkg")); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r); toast("Selected. Press Ctrl+C (or Cmd+C) to copy."); };
-    try { navigator.clipboard.writeText(text).then(() => toast("Copied the package JSON."), fallback); } catch (e) { fallback(); }
-  };
 
   function confirmDelete() {
     const box = $("gActions");
@@ -921,7 +803,7 @@ ${FORMAT}`;
     const vs = (current && current.versions) || [];
     if (!vs.length) { $("versions").innerHTML = '<li><span>Only the original version so far.</span></li>'; return; }
     $("versions").innerHTML = vs.slice().reverse().map((v, i) =>
-      '<li><div><strong>Version ' + v.n + "</strong>" + (current.published && current.published.n === v.n ? ' <span class="tag accent">Published</span>' : "") + " <span>" + esc(v.note || "") + "</span></div>" +
+      '<li><div><strong>Version ' + v.n + "</strong>" + " <span>" + esc(v.note || "") + "</span></div>" +
       (i === 0 ? "<span>Current</span>" : '<button class="linkish" type="button" data-restore="' + v.n + '">Use this</button>') + "</li>"
     ).join("");
   }
@@ -1015,7 +897,6 @@ ${FORMAT}`;
         description: out.parsed.description || base.description,
         rules: out.parsed.rules || base.rules,
         tutorial: out.parsed.tutorial.length ? out.parsed.tutorial : (base.tutorial || []),
-        translations: null,
         allowedPlayers: out.meta.allowedPlayers, hiddenInformation: out.meta.hiddenInformation,
         code: out.parsed.code,
         chat: (base.chat || []).concat({ role: "user", text: userText }, { role: "ai", text: (out.parsed.notes || "Updated the game.") + (out.fixed ? " (I also fixed a bug found while testing.)" : ""), v: n }),
@@ -1220,15 +1101,10 @@ ${FORMAT}`;
     $("modeCpu").setAttribute("aria-pressed", String(m === "computer"));
     $("passOpts").hidden = m !== "pass";
   }
-  function fillViewAs(n) {
-    const sel = $("viewAs");
-    sel.innerHTML = '<option value="auto">Whoever\'s turn it is</option>' + Array.from({ length: n }, (_, i) => '<option value="' + i + '">' + playerName(i) + "</option>").join("");
-  }
   $("modePass").onclick = () => { setMode("pass"); startMatch(); };
   $("modeCpu").onclick = () => { setMode("computer"); startMatch(); };
-  $("pCount").onchange = () => { fillViewAs(+$("pCount").value); startMatch(); };
+  $("pCount").onchange = () => startMatch();
   $("hideBetween").onchange = () => { if (match) step(); };
-  $("viewAs").onchange = () => { if (match) { match.viewer = null; step(); } };
   $("restartBtn").onclick = () => startMatch();
   $("againBtn").onclick = () => startMatch();
 
@@ -1308,9 +1184,8 @@ ${FORMAT}`;
       } catch (e) { if (!m.stopped) showBug("The computer player broke the game: " + e.message); }
       return;
     }
-    const fixed = mode === "pass" && $("viewAs").value !== "auto";
-    const viewer = mode === "computer" ? 0 : fixed ? +$("viewAs").value : cur;
-    if (mode === "pass" && !fixed && $("hideBetween").checked && m.n > 1 && m.viewer !== cur) {
+    const viewer = mode === "computer" ? 0 : cur;
+    if (mode === "pass" && $("hideBetween").checked && m.n > 1 && m.viewer !== cur) {
       setStatus(dot(cur) + playerName(cur) + "'s turn");
       $("handoffTitle").textContent = "Pass the device to " + playerName(cur);
       $("handoffBtn").textContent = "I'm " + playerName(cur) + ", show my view";
@@ -1320,8 +1195,7 @@ ${FORMAT}`;
     }
     m.viewer = viewer;
     if (mode === "computer") setStatus(dot(cur) + 'Your turn <span class="sub">You are ' + playerName(0) + "</span>");
-    else if (viewer === cur) setStatus(dot(cur) + playerName(cur) + "'s turn");
-    else setStatus(dot(cur) + playerName(cur) + "'s turn " + '<span class="sub">Viewing as ' + playerName(viewer) + ", so moves are off</span>");
+    else setStatus(dot(cur) + playerName(cur) + "'s turn");
     sendStateChange({ message_kind: "state_change", state: m.state, turn_of_user: { player_index: cur, kind: "human" }, my_user: { player_index: viewer, kind: "human" }, players: m.players });
   }
 

@@ -59,8 +59,6 @@ with sync_playwright() as p:
     check(marks.count("X") == 1 and marks.count("O") == 1, "tic-tac-toe example: you play X, computer answers O")
     logtxt = pg.evaluate("document.querySelector('#apiLog').textContent")
     check('"type":"place","cell":0' in logtxt and "turn_of_player_index" in logtxt, "moves use the backend's {type:place, cell} format; make_move uses the deck's fields")
-    pkg0 = json.loads(pg.evaluate("document.querySelector('#pkg').textContent"))
-    check(pkg0["POST /games/{id}/versions"]["engineKey"] == "gb-tic-tac-toe", "tic-tac-toe package engineKey gb-tic-tac-toe")
     pg.screenshot(path=str(OUT / "0_ttt.png"), full_page=True)
 
     # Tic-Tac-Toe pass and play with the screen hidden between turns
@@ -83,6 +81,7 @@ with sync_playwright() as p:
     pg.click("#newBtn")
     pg.click("#counts [data-n='3']"); pg.click("#counts [data-n='6']")
     check(pg.evaluate("[...document.querySelectorAll('#counts [aria-pressed=true]')].map(b=>b.dataset.n).join(',')") == "2,3,6", "player picker selects a set (2, 3, 6)")
+    check(pg.evaluate("document.querySelectorAll('#ideas .chip').length") == 2, "suggestions are the two Tic-Tac-Toe ideas")
     pg.click("#counts [data-n='3']"); pg.click("#counts [data-n='6']")
     pg.fill("#newPrompt", "Tic-Tac-Toe on a 4x4 board, 4 in a row wins")
     pg.click("#buildBtn")
@@ -106,15 +105,12 @@ with sync_playwright() as p:
     pg.fill("#chatInput", "make it 5x5")
     pg.click("#sendBtn")
     pg.wait_for_function("document.querySelector('#gTitle').textContent.includes('5×5')", timeout=20000)
-    check("Draft v2" in pg.inner_text("#gTags"), "change created version 2 (draft)")
+    check("Version 2" in pg.inner_text("#gTags"), "change created version 2")
     check("allowedPlayers is now [2]" in pg.evaluate("window.__prompts[2]"), "change prompt carries the allowed-player set")
     pg.wait_for_function("document.querySelector('#stage').shadowRoot.querySelectorAll('.sq').length === 25")
     check(True, "5x5 board rendered")
     doc = list(pg.evaluate("window.__store").values())[0]
     check(len(doc["versions"]) == 2 and len(doc["chat"]) == 4, "versions and chat saved")
-    pkg = json.loads(pg.evaluate("document.querySelector('#pkg').textContent"))
-    v = pkg["POST /games/{id}/versions"]
-    check(pkg["POST /games"]["slug"] == "tic-tac-toe-5-5" and v["engineVersion"] == 2 and v["manifest"]["players"]["allowedCounts"] == [2] and "const game" in v["rulesArtifact"], "backend package matches the backend DTOs")
     pg.screenshot(path=str(OUT / "5_changed.png"), full_page=True)
 
     # Illegal move message
