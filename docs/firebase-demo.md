@@ -35,6 +35,12 @@ creating or changing a game, not for accessing saved games.
 7. Show the game document in Firebase Console under Firestore → users → your UID
    → games, to demonstrate that the data is stored online.
 
+To change a saved game, open it from **My games**, then use **Change the game**
+beside the board (below the board on narrow screens). Enter a request such as
+"make the board 5×5" and press **update game →**. If no key is active, the prompt
+remains visible and **Open AI settings** takes you to key setup. Press **Use this
+key** to enable updating, then wait for the new version and **Saved to cloud**.
+
 Google login uses a redirect with the Hosting URL as `authDomain`, so the auth
 helper shares the app's domain. Firebase's default domain and the `web.app`
 handler are authorized in the Google provider configuration.

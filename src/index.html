@@ -339,6 +339,10 @@ select { min-height: 40px; border: 1px solid var(--line); border-radius: var(--r
         <aside class="chat card">
           <h2>Change the game</h2>
           <p class="hint" id="chatHint">Describe a change. It becomes a new version.</p>
+          <div id="chatAiSetup" hidden>
+            <p class="hint" id="chatAiNote"></p>
+            <button class="btn small primary" id="chatAiSettings" type="button" style="margin-top:8px">Open AI settings</button>
+          </div>
           <ol class="bubbles" id="bubbles"></ol>
           <div class="progress" id="chatProgress" hidden></div>
           <form class="chatform" id="chatForm">
@@ -1354,6 +1358,12 @@ ${FORMAT}`;
     $("cloudSettings").appendChild(retry);
     retry.onclick = () => { retry.hidden = true; for (const id of cloudPending) { const rec = myGames.find(g => g.id === id); if (rec) saveGame(rec); } };
     $("refreshCloud").onclick = refreshCloud;
+    $("chatAiSettings").onclick = () => {
+      $("aiSettings").closest("details").open = true;
+      const target = GameBuilderCloud.backend === "firebase" && !uid ? $("googleSignIn") : $("aiKey");
+      target.scrollIntoView({ block: "center", behavior: "smooth" });
+      target.focus({ preventScroll: true });
+    };
     $("aiProvider").onchange = () => { $("aiModel").value = $("aiProvider").value === "openai" ? "gpt-4.1" : "claude-sonnet-4-6"; };
     $("aiSettings").onsubmit = e => {
       e.preventDefault();
@@ -1410,8 +1420,13 @@ ${FORMAT}`;
   }
   function applyAiAvailability() {
     $("noAi").hidden = !!caps.sample;
-    $("chatForm").hidden = !caps.sample;
-    $("chatHint").hidden = !caps.sample;
+    $("chatAiSetup").hidden = !!caps.sample;
+    $("chatAiSettings").hidden = !window.__gbCloud;
+    $("chatAiNote").textContent = window.__gbCloud
+      ? (window.GameBuilderCloud?.backend === "firebase" && !uid
+        ? "Sign in with Google, then enter your OpenAI API key in AI settings to update this game."
+        : "Enter your API key in AI settings to update this game. Keys clear when you reload the page.")
+      : "AI editing is unavailable in this view. Open this artifact in Claude to update the game.";
     setBusy(!!building);
   }
 
