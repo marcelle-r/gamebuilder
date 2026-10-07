@@ -1,0 +1,19 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function owns(userId) { return request.auth != null && request.auth.uid == userId; }
+    function validGame() {
+      let d = request.resource.data;
+      return d.keys().hasOnly(['title', 'description', 'rules', 'tutorial', 'allowedPlayers', 'hiddenInformation', 'code', 'chat', 'versions', 'createdAt', 'updatedAt'])
+        && d.keys().hasAll(['title', 'code', 'allowedPlayers', 'createdAt', 'updatedAt'])
+        && d.title is string && d.title.size() > 0 && d.title.size() <= 200
+        && d.code is string && d.code.size() > 0 && d.code.size() < 900000
+        && d.allowedPlayers is list && d.allowedPlayers.size() > 0 && d.allowedPlayers.size() <= 10
+        && d.createdAt is number && d.updatedAt is number;
+    }
+    match /users/{userId}/games/{gameId} {
+      allow read, delete: if owns(userId);
+      allow create, update: if owns(userId) && validGame();
+    }
+  }
+}

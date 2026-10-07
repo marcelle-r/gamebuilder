@@ -96,6 +96,7 @@ const HARNESS = String.raw`
         try { view(s, -1, {}); view(s, 0, {}); } catch (e) { throw new Error("render failed at the end of a game: " + msg(e)); }
       }
     });
+    if (finished !== games) throw new Error("The game did not end within the 600-move playtest limit. Add a move limit or draw rule.");
     return { games: games, finished: finished, moves: moves };
   }
   var H = {

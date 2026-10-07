@@ -1,0 +1,6 @@
+{
+  "apiKey": "Firebase public web API key (not your OpenAI key)",
+  "authDomain": "YOUR_PROJECT_ID.firebaseapp.com",
+  "projectId": "YOUR_PROJECT_ID",
+  "appId": "YOUR_FIREBASE_WEB_APP_ID"
+}

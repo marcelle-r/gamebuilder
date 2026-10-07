@@ -83,7 +83,7 @@ docs/
 
 ## Build and test
 
-Requires Node 22.6 or later. The browser tests also need Python 3 with Playwright and Chromium.
+Requires Node 24.12 or later. The original browser tests also need Python 3 with Playwright and Chromium. Firebase tests use Java 21 or later and installed Chrome.
 
 ```bash
 npm run build          # writes dist/gamebuilder.html
@@ -95,16 +95,39 @@ The browser tests replace the AI and storage with local stand-ins, so they run o
 
 ## Running it
 
+### Cloud demo extension
+
+The live demo is [GameBuilder Demo](https://gamebuilder-demo-c9e4e.web.app).
+The website is hosted on **Google Firebase Hosting**. **Firebase Authentication**
+provides Google sign-in, and **Cloud Firestore** stores games and their recent
+versions online in the Firebase project `gamebuilder-demo-c9e4e`.
+
+Sign in with the **same Google account** on any computer or phone to access the
+same private library. Create and save a game on one device, then open it from
+**My games** on another. Each Google account has its own library; a different
+account will not see your games. Wait for **Saved to cloud** before switching
+devices, and use **Refresh cloud games** to load changes made elsewhere.
+
+Enter an OpenAI API key to generate or refine games. The key stays in the current
+tab and goes directly to OpenAI; loading and playing saved games need no key.
+Run `npm run build:firebase` to build or `npm run deploy:firebase` to publish.
+See [the Firebase demo guide](docs/firebase-demo.md) for setup and verification.
+Pushing code to GitHub updates the repository; Firebase deployment is a separate
+step. The existing GitHub Pages workflow builds the original artifact, so use the
+Firebase URL above for the cloud demo.
+The earlier Worker/D1 build is documented in [docs/cloud-demo.md](docs/cloud-demo.md).
+
+### Claude artifact
+
 `dist/gamebuilder.html` is published as a Claude artifact. In that environment the page gets three services from the host: AI generation on the signed-in user's Claude account, a private per-user store for saved games, and the user's name. Opened anywhere else, it still runs the built-in example, but building and saving are turned off.
 
 ## Status and next steps
 
-Done: describe → generate → playtest → play (pass-and-play and vs computer) → refine, with the iframe message contract and Tic-Tac-Toe as the shared test game.
+Done: describe → generate → playtest → play (pass-and-play and vs computer) → refine, with the iframe message contract and Tic-Tac-Toe as the shared test game. Firebase Hosting, Google sign-in, and per-user Cloud Firestore libraries support saving and loading across devices.
 
 Next:
-1. **Google login.** The course spec asks for Google sign-in. Right now identity comes from the Claude account. The plan is Firebase Authentication on self-hosted pages, the same stack the portals use.
-2. **Publish versions to the backend,** using the backend team's `POST /games` and `POST /games/{id}/versions`.
-3. **Emulator "View as"** for testing every seat's perspective, **publishing** frozen versions, and **translations** of rules and tutorials. Early prototypes of these are on the `extras` branch.
+1. **Publish versions to the backend,** using the backend team's `POST /games` and `POST /games/{id}/versions`.
+2. **Emulator "View as"** for testing every seat's perspective, **publishing** frozen versions, and **translations** of rules and tutorials. Early prototypes of these are on the `extras` branch.
 
 ## Credits
 

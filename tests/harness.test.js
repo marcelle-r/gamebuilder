@@ -43,8 +43,10 @@ for (const ex of EXAMPLES) {
   // An illegal move must be rejected with a readable reason.
   const st = call("init", { numPlayers: meta.allowedPlayers[0] });
   const bad = { type: "place", cell: 9 };
-  try { call("apply", { state: st.state, move: bad }); throw new Error("illegal move accepted"); }
-  catch (e) { console.log("  illegal move rejected:", e.message); }
+  let rejected = false;
+  try { call("apply", { state: st.state, move: bad }); }
+  catch (e) { rejected = true; console.log("  illegal move rejected:", e.message); }
+  if (!rejected) throw new Error("illegal move accepted");
 }
 
 // Broken code is reported, not crashed.
@@ -59,4 +61,9 @@ if (cm.type !== "place" || cm.cell !== 5) throw new Error("computer should win a
 tg.state.board = ["X", "X", null, "O", null, null, null, null, null]; tg.state.turn = 1;
 if (ttt("computer", { state: tg.state }).cell !== 2) throw new Error("computer should block at cell 2");
 console.log("tic-tac-toe: backend move format, computer wins and blocks");
+const endless = load(`const game = { allowedPlayers: [2], init: () => ({ turn: 0 }), currentPlayer: s => s.turn,
+ legalMoves: () => [{ type: 'wait' }], applyMove: s => ({ turn: 1-s.turn }), result: () => null, render: () => ({ html: '<button data-move="{}">Wait</button>' }) };`);
+let endlessRejected = false;
+try { endless('smoke'); } catch (e) { endlessRejected = /did not end/.test(e.message); }
+if (!endlessRejected) throw new Error('Non-terminating game passed playtesting');
 console.log("ALL HARNESS TESTS PASSED");

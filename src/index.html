@@ -86,6 +86,9 @@ main { padding: 28px clamp(16px, 3vw, 40px) 48px; min-width: 0; }
 .row.end { justify-content: space-between; }
 .field { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; color: var(--muted); }
 select { min-height: 40px; border: 1px solid var(--line); border-radius: var(--radius); padding: 0 10px; background: var(--bg); }
+#aiSettings input { min-width:0;width:100%;min-height:40px;border:1px solid var(--line);border-radius:var(--radius);padding:8px 10px;background:var(--bg); }
+#cloudSettings { overflow-wrap:anywhere; }
+#cloudSettings .btn { width:100%; }
 .stepper { display: inline-flex; align-items: center; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
 .stepper button { width: 42px; height: 42px; border: 0; background: var(--bg); color: var(--accent); font-size: 20px; cursor: pointer; }
 .stepper button:disabled { color: var(--line); cursor: default; }
@@ -205,6 +208,33 @@ select { min-height: 40px; border: 1px solid var(--line); border-radius: var(--r
 <div class="shell">
   <aside class="side">
     <button class="btn outline" id="newBtn" type="button">+ new game</button>
+    <section id="cloudSettings" hidden>
+      <h3>// cloud & AI</h3>
+      <p id="cloudStatus" role="status" aria-live="polite">Connecting to cloud…</p>
+      <div id="firebaseAccount" hidden style="display:grid;gap:10px;margin-bottom:10px">
+        <button class="btn" id="googleSignIn" type="button">Sign in with Google</button>
+        <button class="btn outline" id="googleSignOut" type="button" hidden>Sign out</button>
+        <label for="importLibrary" id="importLibraryLabel" hidden>Import saved games
+          <input id="importLibrary" type="file" accept="application/json,.json" style="max-width:100%">
+        </label>
+      </div>
+      <button class="btn outline" id="refreshCloud" type="button">Refresh cloud games</button>
+      <details style="margin-top:14px" open>
+        <summary>AI settings</summary>
+        <form id="aiSettings" style="display:grid;gap:10px;margin-top:12px">
+          <label for="aiProvider">Provider</label>
+          <select id="aiProvider"><option value="openai">OpenAI</option><option value="anthropic">Anthropic</option></select>
+          <label for="aiModel">Model ID</label>
+          <input id="aiModel" value="gpt-4.1" required spellcheck="false">
+          <label for="aiKey">API key</label>
+          <input id="aiKey" type="password" autocomplete="off" required placeholder="Paste your API key">
+          <small>Used only in this tab. Never saved with games. Your provider bills API usage.</small>
+          <button class="btn" type="submit">Use this key</button>
+          <button class="btn outline" id="clearAiKey" type="button">Clear key</button>
+          <p id="aiSettingsStatus" role="status" aria-live="polite"></p>
+        </form>
+      </details>
+    </section>
     <section>
       <h3>// my games</h3>
       <ul class="list" id="myList"></ul>
@@ -221,7 +251,7 @@ select { min-height: 40px; border: 1px solid var(--line); border-radius: var(--r
     <section id="viewNew" class="composer">
       <h1>Describe a <span>game</span></h1>
       <p class="lede">Say the rules in plain words. We build it, test it, and you play.</p>
-      <p class="notice" id="noAi" hidden>Building games needs Claude, which isn't available in this view. You can still play the built-in game.</p>
+      <p class="notice" id="noAi" hidden>Enter an API key in AI settings to create and change games. You can still play saved games and the built-in example.</p>
       <form class="card" id="newForm" style="display:grid;gap:16px">
         <label for="newPrompt" style="font-weight:600">What game should we build?</label>
         <textarea class="prompt" id="newPrompt" placeholder="Example: Tic-Tac-Toe on a 4×4 board, 4 in a row wins"></textarea>
@@ -405,7 +435,12 @@ select { min-height: 40px; border: 1px solid var(--line); border-radius: var(--r
 
   /* ---------- Sandbox runner (one Web Worker per game version) ---------- */
   function makeRunner(code) {
-    const url = URL.createObjectURL(new Blob([code + "\n" + HARNESS], { type: "text/javascript" }));
+    // A data URL gives this worker an opaque origin, preventing generated code
+    // from reading the host's Firebase authentication storage or cookies.
+    const bytes = new TextEncoder().encode(code + "\n" + HARNESS);
+    let binary = "";
+    for (const byte of bytes) binary += String.fromCharCode(byte);
+    const url = "data:text/javascript;base64," + btoa(binary);
     const pending = new Map();
     let seq = 0, dead = null, worker;
     let readyOk, readyFail;
@@ -618,9 +653,10 @@ ${FORMAT}`;
         try {
           res = await caps.sample(prompt, { cache: false, signal: ctl.signal, onText: ({ text }) => ui.stream(text) });
         } catch (e) {
-          if (e && e.code === "cancelled") throw Object.assign(new Error("Stopped."), { quiet: true });
+      if (e && e.code === "cancelled") throw Object.assign(new Error("Stopped."), { quiet: true });
           if (e && e.code === "not_granted") { caps.sample = null; applyAiAvailability(); }
-          throw new Error(SAMPLE_COPY[e && e.code] || "Couldn't reach Claude. Try again.");
+          if (e.name === "AbortError") throw Object.assign(new Error("Stopped."), { quiet: true });
+          throw new Error(SAMPLE_COPY[e && e.code] || e.message || "Couldn't reach the AI provider. Try again.");
         }
         if (res.truncated) throw new Error("The game was too long to write in one go. Try a simpler description.");
         const parsed = parseReply(res.text);
@@ -684,6 +720,21 @@ ${FORMAT}`;
     const local = myGames.findIndex((g) => g.id === rec.id);
     if (local >= 0) myGames[local] = rec; else myGames.unshift(rec);
     renderSidebar();
+    if (window.__gbCloud) {
+      cloudPending.add(rec.id);
+      $("cloudStatus").textContent = "Saving to cloud…";
+      saveQueue = saveQueue.then(async () => {
+        await GameBuilderCloud.save(rec.id, toDoc(rec));
+        cloudPending.delete(rec.id);
+        $("cloudStatus").textContent = "Saved to cloud · " + new Date().toLocaleTimeString();
+        showSaveNote("");
+      }).catch(() => {
+        $("cloudStatus").textContent = "Cloud save failed";
+        showSaveNote("This game has not reached the cloud. Keep this tab open and use Retry cloud saves.");
+        $("retryCloud").hidden = false;
+      });
+      return;
+    }
     if (!canSave) return;
     saveQueue = saveQueue.then(() => caps.db.collection("data/users/" + uid).doc(rec.id).set(toDoc(rec))).catch((e) => {
       canSave = false;
@@ -691,6 +742,16 @@ ${FORMAT}`;
     });
   }
   function deleteGame(rec) {
+    if (window.__gbCloud) {
+      saveQueue = saveQueue.then(async () => {
+        await GameBuilderCloud.remove(rec.id);
+        cloudPending.delete(rec.id);
+        myGames = myGames.filter(g => g.id !== rec.id);
+        renderSidebar();
+        $("cloudStatus").textContent = "Deleted from cloud";
+      }).catch(() => toast("Cloud deletion failed. Refresh and try again."));
+      return;
+    }
     myGames = myGames.filter((g) => g.id !== rec.id);
     renderSidebar();
     if (canSave) saveQueue = saveQueue.then(() => caps.db.collection("data/users/" + uid).doc(rec.id).delete()).catch(() => {});
@@ -1047,6 +1108,7 @@ ${FORMAT}`;
     const vars = Object.entries(themeVars()).map(([k, val]) => k + ":" + val).join(";");
     const safe = code.replace(/<\/script/gi, "<\\/script");
     return '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">' +
+      '<meta http-equiv="Content-Security-Policy" content="default-src &#39;none&#39;; script-src &#39;unsafe-inline&#39;; style-src &#39;unsafe-inline&#39;; img-src data:; connect-src &#39;none&#39;; form-action &#39;none&#39;; base-uri &#39;none&#39;">' +
       "<style>:root{" + vars + ";color-scheme:dark}" + // the page is always dark; matching it keeps the frame transparent
 
       "html,body{margin:0;background:transparent;color:var(--g-fg);font:15px/1.4 system-ui,-apple-system,'Segoe UI',sans-serif}" +
@@ -1251,8 +1313,7 @@ ${FORMAT}`;
     m.busy = true;
     log(d);
     try {
-      await runner.call("apply", { state: m.state, move: d.move });
-      const info = await runner.call("info", { state: d.next_state });
+      const info = await runner.call("apply", { state: m.state, move: d.move });
       if (m.stopped) return;
       if ((info.current ?? null) !== (d.turn_of_player_index ?? null)) log({ message_kind: "note", text: "turn_of_player_index from the game didn't match the rules; using " + info.current });
       Object.assign(m, info);
@@ -1266,6 +1327,84 @@ ${FORMAT}`;
   }
 
   /* ---------- Capabilities ---------- */
+  const cloudPending = new Set();
+  async function refreshCloud() {
+    if (GameBuilderCloud.backend === "firebase" && !uid) return;
+    const loadingUid = uid;
+    $("cloudStatus").textContent = "Loading cloud games…";
+    try {
+      const saved = await GameBuilderCloud.list();
+      if (loadingUid !== uid) return;
+      myGames = saved.filter(g => !cloudPending.has(g.id)).concat(myGames.filter(g => cloudPending.has(g.id)));
+      renderSidebar();
+      $("cloudStatus").textContent = cloudPending.size ? "Unsaved changes · retry cloud saves" : "Cloud connected · " + saved.length + " saved game" + (saved.length === 1 ? "" : "s");
+    } catch {
+      $("cloudStatus").textContent = "Cloud unavailable · refresh to retry";
+      toast("Couldn't load cloud games. Your open game is preserved.");
+    }
+  }
+  async function connectCloud() {
+    $("cloudSettings").hidden = false;
+    const retry = document.createElement("button");
+    retry.id = "retryCloud"; retry.type = "button"; retry.className = "btn outline";
+    retry.textContent = "Retry cloud saves"; retry.hidden = true;
+    $("cloudSettings").appendChild(retry);
+    retry.onclick = () => { retry.hidden = true; for (const id of cloudPending) { const rec = myGames.find(g => g.id === id); if (rec) saveGame(rec); } };
+    $("refreshCloud").onclick = refreshCloud;
+    $("aiProvider").onchange = () => { $("aiModel").value = $("aiProvider").value === "openai" ? "gpt-4.1" : "claude-sonnet-4-6"; };
+    $("aiSettings").onsubmit = e => {
+      e.preventDefault();
+      if (GameBuilderCloud.backend === "firebase" && !uid) { toast("Sign in with Google first."); return; }
+      GameBuilderCloud.configure({ provider: $("aiProvider").value, model: $("aiModel").value.trim(), key: $("aiKey").value.trim() });
+      $("aiKey").value = "";
+      caps.sample = GameBuilderCloud.sample;
+      $("aiSettingsStatus").textContent = "Key set for this tab. It will be checked when you build a game.";
+      applyAiAvailability();
+    };
+    $("clearAiKey").onclick = () => {
+      GameBuilderCloud.configure(null); caps.sample = null; $("aiKey").value = "";
+      $("aiSettingsStatus").textContent = "Key cleared."; applyAiAvailability();
+    };
+    const updateSession = async user => {
+      const previousUid = uid;
+      uid = user?.id || null; canSave = !!uid;
+      if (previousUid !== uid) { myGames = []; if (current && !current.example) showNew(); renderSidebar(); }
+      $("whoName").textContent = user?.name || "Guest"; $("avatar").textContent = user?.name?.slice(0, 1).toUpperCase() || "?";
+      if (GameBuilderCloud.backend === "firebase") {
+        $("googleSignIn").hidden = !!uid; $("googleSignOut").hidden = !uid;
+        $("importLibraryLabel").hidden = !uid;
+        caps.sample = uid && GameBuilderCloud.configured() ? GameBuilderCloud.sample : null;
+        applyAiAvailability();
+      }
+      if (uid) await refreshCloud();
+      else $("cloudStatus").textContent = "Sign in with Google to load and save your games.";
+    };
+    try {
+      if (GameBuilderCloud.backend === "firebase") {
+        $("firebaseAccount").hidden = false;
+        $("aiProvider").querySelector('[value="anthropic"]').remove();
+        $("googleSignIn").onclick = () => GameBuilderCloud.signIn().catch(() => toast("Google sign-in failed. Please try again."));
+        $("googleSignOut").onclick = () => {
+          if (cloudPending.size || building) { toast("Finish building and saving before signing out."); return; }
+          GameBuilderCloud.signOut().catch(() => toast("Sign-out failed. Please retry."));
+        };
+        $("importLibrary").onchange = async () => {
+          const file = $("importLibrary").files[0]; if (!file) return;
+          try {
+            if (file.size > 10000000) throw new Error("The library export is too large.");
+            const count = await GameBuilderCloud.importLibrary(JSON.parse(await file.text()));
+            await refreshCloud(); toast("Imported " + count + " game(s) into Firestore.");
+          } catch (error) { toast(error.message || "Import failed. Please retry."); }
+          finally { $("importLibrary").value = ""; }
+        };
+      }
+      await updateSession(await GameBuilderCloud.session());
+      GameBuilderCloud.onSession?.(updateSession);
+    } catch { $("cloudStatus").textContent = "Connection failed · reload to retry"; }
+    document.addEventListener("visibilitychange", () => { if (!document.hidden && !building && uid) refreshCloud(); });
+    setInterval(() => { if (!document.hidden && !building && !cloudPending.size && uid) refreshCloud(); }, 30000);
+    window.addEventListener("beforeunload", e => { if (cloudPending.size) { e.preventDefault(); e.returnValue = ""; } });
+  }
   function applyAiAvailability() {
     $("noAi").hidden = !!caps.sample;
     $("chatForm").hidden = !caps.sample;
@@ -1274,6 +1413,7 @@ ${FORMAT}`;
   }
 
   async function connect() {
+    if (window.__gbCloud) return connectCloud();
     const use = window.claude && typeof window.claude.use === "function" ? (n) => window.claude.use(n).catch(() => null) : async () => null;
     const [sample, db, user] = await Promise.all([use("sample"), use("db"), use("user")]);
     caps.sample = sample; caps.db = db; caps.user = user;

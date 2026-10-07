@@ -3,3 +3,10 @@ dist/
 tests/output/
 __pycache__/
 .DS_Store
+.env
+.env.*
+!.env.example
+.firebase/
+firebase-debug.log
+firestore-debug.log
+ui-debug.log

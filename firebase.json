@@ -1,0 +1,28 @@
+{
+  "auth": {
+    "providers": {
+      "googleSignIn": {
+        "oAuthBrandDisplayName": "GameBuilder Demo",
+        "supportEmail": "sc5386@columbia.edu",
+        "authorizedRedirectUris": ["https://gamebuilder-demo-c9e4e.web.app/__/auth/handler"]
+      }
+    }
+  },
+  "hosting": {
+    "public": "dist/firebase",
+    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+    "headers": [{ "source": "**", "headers": [
+      { "key": "X-Content-Type-Options", "value": "nosniff" },
+      { "key": "Referrer-Policy", "value": "no-referrer" },
+      { "key": "Cache-Control", "value": "no-cache" }
+    ] }]
+  },
+  "firestore": { "rules": "firestore.rules" },
+  "emulators": {
+    "auth": { "port": 9099 },
+    "firestore": { "port": 8080 },
+    "hosting": { "port": 5000 },
+    "ui": { "enabled": false },
+    "singleProjectMode": true
+  }
+}

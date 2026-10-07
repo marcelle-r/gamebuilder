@@ -5,10 +5,23 @@
   "description": "Describe a turn-based game, and AI writes it, playtests it in a sandbox, and lets you play and refine it.",
   "scripts": {
     "build": "node scripts/build.js",
-    "test": "node tests/harness.test.js",
+    "build:cloud": "node scripts/build-cloud.js",
+    "build:firebase": "node scripts/build-firebase.js",
+    "deploy:firebase": "npm run build:firebase && firebase deploy --only hosting,auth,firestore:rules",
+    "test:firebase": "node scripts/test-firebase.js",
+    "db:generate": "drizzle-kit generate",
+    "test": "node tests/harness.test.js && node tests/cloud.test.mjs",
     "test:browser": "npm run build && python3 tests/browser_fallback_test.py && python3 tests/browser_iframe_test.py"
   },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "6.0.0",
+    "drizzle-kit": "0.31.10",
+    "drizzle-orm": "0.45.2",
+    "firebase": "13.0.0",
+    "firebase-tools": "15.32.1",
+    "playwright": "1.62.1"
+  },
   "engines": {
-    "node": ">=22.6"
+    "node": ">=24.12.0"
   }
 }
